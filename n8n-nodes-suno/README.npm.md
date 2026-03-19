@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://unpkg.com/n8n-nodes-suno@1.0.0/dist/nodes/Suno/suno.png" alt="Suno" width="80" />
+  <img src="https://unpkg.com/n8n-nodes-suno@latest/dist/nodes/Suno/suno.png" alt="Suno" width="80" />
 </p>
 
 <h1 align="center">n8n-nodes-suno</h1>
@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  <img src="https://unpkg.com/n8n-nodes-suno@1.0.0/suno-banner.jpeg" alt="Suno AI Music Generation" width="100%" />
+  <img src="https://unpkg.com/n8n-nodes-suno@latest/suno-banner.jpeg" alt="Suno AI Music Generation" width="100%" />
 </p>
 
 ---
