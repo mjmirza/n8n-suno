@@ -1,0 +1,22 @@
+{
+	"node": "n8n-nodes-suno.suno",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI", "Miscellaneous"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://docs.sunoapi.org"
+			}
+		],
+		"credentialDocumentation": [
+			{
+				"url": "https://sunoapi.org/api-key"
+			}
+		]
+	},
+	"alias": ["suno", "music", "ai", "audio", "lyrics", "generation"],
+	"subcategories": {
+		"AI": ["Audio"]
+	}
+}
