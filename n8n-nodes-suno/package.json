@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-suno",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "n8n community node for the Suno AI Music Generation API — generate music, lyrics, audio processing, and more",
 	"keywords": [
 		"n8n-community-node-package",
@@ -18,6 +18,14 @@
 		"url": "https://next8n.com"
 	},
 	"homepage": "https://next8n.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mjmirza/n8n-suno.git",
+		"directory": "n8n-nodes-suno"
+	},
+	"bugs": {
+		"url": "https://github.com/mjmirza/n8n-suno/issues"
+	},
 	"main": "dist/nodes/Suno/Suno.node.js",
 	"files": [
 		"dist",
