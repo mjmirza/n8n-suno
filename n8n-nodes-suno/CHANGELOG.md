@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.5] - 2026-11-01
+
+### Changed
+- The README states what the credential test checks. It fails on every error code Suno documents, such as 401 for a wrong key, and a green check does not prove the account can generate.
+
 ## [1.7.4] - 2026-11-01
 
 ### Fixed
