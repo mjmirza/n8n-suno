@@ -61,19 +61,19 @@ async function addVocals(
 		body.vocalGender = vocalGender;
 	}
 
-	const styleWeight = this.getNodeParameter('styleWeight', itemIndex, undefined) as number | undefined;
+	const styleWeight = this.getNodeParameter('styleWeight', itemIndex, null) as number | undefined;
 	if (styleWeight !== undefined && styleWeight !== null) {
 		assertWeightValue(styleWeight, 'Style Weight');
 		body.styleWeight = styleWeight;
 	}
 
-	const weirdnessConstraint = this.getNodeParameter('weirdnessConstraint', itemIndex, undefined) as number | undefined;
+	const weirdnessConstraint = this.getNodeParameter('weirdnessConstraint', itemIndex, null) as number | undefined;
 	if (weirdnessConstraint !== undefined && weirdnessConstraint !== null) {
 		assertWeightValue(weirdnessConstraint, 'Weirdness Constraint');
 		body.weirdnessConstraint = weirdnessConstraint;
 	}
 
-	const audioWeight = this.getNodeParameter('audioWeight', itemIndex, undefined) as number | undefined;
+	const audioWeight = this.getNodeParameter('audioWeight', itemIndex, null) as number | undefined;
 	if (audioWeight !== undefined && audioWeight !== null) {
 		assertWeightValue(audioWeight, 'Audio Weight');
 		body.audioWeight = audioWeight;
@@ -123,19 +123,19 @@ async function addInstrumental(
 		body.vocalGender = vocalGender;
 	}
 
-	const styleWeight = this.getNodeParameter('styleWeight', itemIndex, undefined) as number | undefined;
+	const styleWeight = this.getNodeParameter('styleWeight', itemIndex, null) as number | undefined;
 	if (styleWeight !== undefined && styleWeight !== null) {
 		assertWeightValue(styleWeight, 'Style Weight');
 		body.styleWeight = styleWeight;
 	}
 
-	const audioWeight = this.getNodeParameter('audioWeight', itemIndex, undefined) as number | undefined;
+	const audioWeight = this.getNodeParameter('audioWeight', itemIndex, null) as number | undefined;
 	if (audioWeight !== undefined && audioWeight !== null) {
 		assertWeightValue(audioWeight, 'Audio Weight');
 		body.audioWeight = audioWeight;
 	}
 
-	const weirdnessConstraint = this.getNodeParameter('weirdnessConstraint', itemIndex, undefined) as number | undefined;
+	const weirdnessConstraint = this.getNodeParameter('weirdnessConstraint', itemIndex, null) as number | undefined;
 	if (weirdnessConstraint !== undefined && weirdnessConstraint !== null) {
 		assertWeightValue(weirdnessConstraint, 'Weirdness Constraint');
 		body.weirdnessConstraint = weirdnessConstraint;

@@ -33,15 +33,15 @@ function validateAndAddWeights(
 	body: IDataObject,
 	itemIndex: number,
 ): void {
-	const styleWeight = ctx.getNodeParameter('styleWeight', itemIndex, undefined) as
+	const styleWeight = ctx.getNodeParameter('styleWeight', itemIndex, null) as
 		| number
 		| undefined;
 	const weirdnessConstraint = ctx.getNodeParameter(
 		'weirdnessConstraint',
 		itemIndex,
-		undefined,
+		null
 	) as number | undefined;
-	const audioWeight = ctx.getNodeParameter('audioWeight', itemIndex, undefined) as
+	const audioWeight = ctx.getNodeParameter('audioWeight', itemIndex, null) as
 		| number
 		| undefined;
 
@@ -196,7 +196,8 @@ async function handleExtend(
 		addOptionalString(body, 'prompt', prompt);
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
-		addOptionalNumber(body, 'continueAt', continueAt);
+		// The API requires continueAt to be greater than 0, so the 0 default means not set.
+		if (continueAt > 0) body.continueAt = continueAt;
 		body.instrumental = instrumental;
 	}
 
@@ -304,7 +305,8 @@ async function handleUploadExtend(
 		addOptionalString(body, 'prompt', prompt);
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
-		addOptionalNumber(body, 'continueAt', continueAt);
+		// The API requires continueAt to be greater than 0, so the 0 default means not set.
+		if (continueAt > 0) body.continueAt = continueAt;
 		body.instrumental = instrumental;
 	}
 

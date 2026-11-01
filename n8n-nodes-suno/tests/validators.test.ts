@@ -200,16 +200,16 @@ describe('assertDurationRange', () => {
 		expect(() => assertDurationRange(10, 20)).not.toThrow();
 	});
 
-	it('accepts minimum 6-second duration', () => {
-		expect(() => assertDurationRange(0, 6)).not.toThrow();
+	it('accepts minimum 10-second duration', () => {
+		expect(() => assertDurationRange(0, 10)).not.toThrow();
 	});
 
 	it('accepts maximum 60-second duration', () => {
 		expect(() => assertDurationRange(0, 60)).not.toThrow();
 	});
 
-	it('rejects duration under 6 seconds (10, 15)', () => {
-		expect(() => assertDurationRange(10, 15)).toThrow('at least 6 seconds');
+	it('rejects duration under 10 seconds (10, 19)', () => {
+		expect(() => assertDurationRange(10, 19)).toThrow('at least 10 seconds');
 	});
 
 	it('rejects duration over 60 seconds (10, 71)', () => {
