@@ -31,3 +31,16 @@
 **Why 1.85.** The node declares its connections with `NodeConnectionTypes.Main`. n8n's community node lint rule `node-connection-type-literal`, which n8n's package scanner enforces, requires that constant instead of the string `'main'`. `n8n-workflow` first exports it in 1.83.0 (checked against the published packages: 1.82.0 lacks it, 1.83.0 has it), and `npm view n8n@1.85.0 dependencies.n8n-workflow` is 1.83.0. n8n 1.85 needs Node.js 18.17 (`npm view n8n@1.85.0 engines`).
 
 **Why package.json does not encode it.** The rule `valid-peer-dependencies` requires `"n8n-workflow": "*"`, so the floor cannot go in `peerDependencies`. It lives in the README and is enforced by the runtime tests.
+
+## Credential test and unexpected credit responses (accepted exception)
+
+**Status.** Accepted by owner (same decision as the smartprofiling credential-test Low): blocked by a local file-protection policy.
+
+**The gap.** The credential test calls `GET /api/v1/generate/credit` and fails only on the documented error codes (400, 401, 402, 404, 405, 409, 413, 422, 429, 430, 451, 455, 500, 501). An HTTP 200 answer that carries none of them passes, for example `{}`, `{"code":403}` or `{"code":"401"}` as a string. The connection check then shows green, and the problem only appears when a workflow runs. Workflow execution is not affected: since 1.7.4 a body without a status code, or with any code other than 200, is an error.
+
+**Why it is not fixed here.**
+- n8n's credential test rules (`responseSuccessBody`) compare one key with one value using strict equality. A rule list can name codes that fail, but cannot express "fail unless code is 200".
+- A node-level test method does not help. n8n's `CredentialsTester.getCredentialTestFunction` returns the credential type's own `test` first (`packages/cli/src/services/credentials-tester.service.ts`, line 77, `if (type.test) {`, n8n-io/n8n master read 2026-11-01). A node's `testedBy` is only consulted when the credential has no `test`.
+- The only fix is therefore an edit to `credentials/SunoApi.credentials.ts`, either removing the declarative test in favour of a node test method or adding a rule per possible code. That directory is protected by a local file-protection policy the owner chose to keep.
+
+**Impact.** A false green on an unusual credit response. A wrong API key still fails the test, because Suno answers it with code 401.

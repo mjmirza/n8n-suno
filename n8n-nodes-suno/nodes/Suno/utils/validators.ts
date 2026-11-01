@@ -132,6 +132,9 @@ export function assertVocalSegment(start: number, end: number): void {
 	if (typeof end !== 'number' || !Number.isFinite(end)) {
 		throw new Error('Vocal end must be a finite number');
 	}
+	if (start < 0 || end < 0) {
+		throw new Error('Vocal start and end must not be negative');
+	}
 	if (start >= end) {
 		throw new Error('Vocal start must be less than vocal end');
 	}

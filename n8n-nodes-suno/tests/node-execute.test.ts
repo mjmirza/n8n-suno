@@ -31,9 +31,15 @@ describe('Suno.execute pairedItem', () => {
 		]);
 	});
 
-	it('should link the success placeholder when the API returns nothing', async () => {
-		const { out } = await run('', [{ json: {} }]);
-		expect(out).toEqual([{ json: { success: true }, pairedItem: { item: 0 } }]);
+	it('should fail, not report success, when the API returns an empty body', async () => {
+		await expect(run('', [{ json: {} }])).rejects.toThrow('unexpected response instead of JSON');
+	});
+
+	it('should link an error item for an empty body when continueOnFail is on', async () => {
+		const { out } = await run('', [{ json: {} }], { continueOnFail: true });
+		expect(out).toHaveLength(1);
+		expect(out[0].pairedItem).toEqual({ item: 0 });
+		expect(out[0].json.error).toEqual(expect.stringContaining('unexpected response'));
 	});
 
 	it('should link error items when continueOnFail is on', async () => {
