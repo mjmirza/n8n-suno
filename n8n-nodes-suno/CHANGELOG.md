@@ -4,6 +4,7 @@
 
 ### Fixed
 - A secret that a response echoes as a property name is now masked in the error data too. Previously only values were masked.
+- A secret echoed as the response `code` is masked in the error's HTTP code as well.
 - Generate Persona, Generate Mashup and Replace Section retry a body code 429, which those endpoints document as a rate limit, and label it a rate limit. Previously it was shown as "Insufficient credits" and never retried. On every other endpoint 429 still means insufficient credits.
 - Generate Persona rejects a negative vocal start or end, and the editor does not allow them. The API requires both to be 0 or more.
 

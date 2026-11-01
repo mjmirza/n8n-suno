@@ -74,3 +74,14 @@ describe('persona vocal segment bounds (round 10)', () => {
 		}
 	});
 });
+
+describe('a secret echoed as the body code (round 10)', () => {
+	it('is masked in httpCode and everywhere else in the thrown error', async () => {
+		const ctx = createMockContext();
+		ctx.getCredentials.mockResolvedValue({ apiKey: KEY });
+		ctx.helpers.httpRequestWithAuthentication.mockResolvedValue({ statusCode: 200, headers: {}, body: { code: KEY, msg: 'rejected' } });
+		const err = (await sunoRequest.call(ctx as unknown as IExecuteFunctions, 'POST', '/x').catch((e: unknown) => e)) as NodeApiError;
+		expect(String(err.httpCode)).not.toContain(KEY);
+		expect(JSON.stringify({ ...err, message: err.message, stack: err.stack })).not.toContain(KEY);
+	});
+});

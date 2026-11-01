@@ -293,7 +293,7 @@ export function redactDeep<T>(value: T, literals: readonly string[] = [], seen =
 /** Masks tokens in an n8n error in place, across message, stack, description, messages and any response data it holds. */
 function redactError<E extends Error>(error: E, literals: readonly string[]): E {
 	const e = error as unknown as Record<string, unknown>;
-	for (const key of ['message', 'stack', 'description', 'messages', 'context', 'errorResponse', 'cause']) {
+	for (const key of ['message', 'stack', 'description', 'messages', 'context', 'errorResponse', 'cause', 'httpCode']) {
 		if (e[key] !== undefined) e[key] = redactDeep(e[key], literals);
 	}
 	return error;
@@ -360,7 +360,7 @@ async function makeRequest(
 		thrown = redactError(
 			new NodeApiError(ctx.getNode(), redactDeep(body, literals) as JsonObject, {
 				message: redactSecrets(message, literals),
-				httpCode: String(code),
+				httpCode: redactSecrets(String(code), literals),
 			}),
 			literals,
 		);
