@@ -4,22 +4,7 @@ import type { INodeProperties } from 'n8n-workflow';
 // Category & resource definitions
 // ---------------------------------------------------------------------------
 
-export const CATEGORIES: INodeProperties = {
-	displayName: 'Category',
-	name: 'category',
-	type: 'options',
-	noDataExpression: true,
-	options: [
-		{ name: 'Account', value: 'account', description: 'Check remaining credits' },
-		{ name: 'Audio Processing', value: 'audioProcessing', description: 'Separate vocals, convert formats, boost style, generate covers' },
-		{ name: 'File Upload', value: 'fileUpload', description: 'Upload files via base64, stream, or URL' },
-		{ name: 'Lyrics', value: 'lyrics', description: 'Generate lyrics and retrieve timestamped lyrics' },
-		{ name: 'Music Generation', value: 'musicGeneration', description: 'Generate, extend, mashup, and manipulate music' },
-		{ name: 'Status & Details', value: 'statusDetails', description: 'Query task status and generation details' },
-	],
-	default: 'musicGeneration',
-};
-
+// Resources in display order, grouped by area. The groups only order the Resource list.
 export const CATEGORY_RESOURCE_MAP: Record<string, Array<{ name: string; value: string; description: string }>> = {
 	musicGeneration: [
 		{ name: 'Music Generation', value: 'musicGeneration', description: 'Generate, extend, cover, mashup, and replace music' },
@@ -47,16 +32,8 @@ export const CATEGORY_RESOURCE_MAP: Record<string, Array<{ name: string; value: 
 };
 
 export function buildResourceProperty(): INodeProperties {
-	const allResources: Array<{ name: string; value: string; description: string }> = [];
-	const seen = new Set<string>();
-	for (const resources of Object.values(CATEGORY_RESOURCE_MAP)) {
-		for (const r of resources) {
-			if (!seen.has(r.value)) {
-				allResources.push(r);
-				seen.add(r.value);
-			}
-		}
-	}
+	// Each resource appears in exactly one group, which a test pins.
+	const allResources = Object.values(CATEGORY_RESOURCE_MAP).flat();
 	return {
 		displayName: 'Resource',
 		name: 'resource',

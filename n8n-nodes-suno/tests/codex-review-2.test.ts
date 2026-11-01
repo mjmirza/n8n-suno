@@ -62,9 +62,9 @@ describe('continueAt default (round 2)', () => {
 			{ audioId: 'a1', defaultParamFlag: false, continueAt: 0, model: 'V4_5PLUS', callBackUrl: 'https://hooks.example.com/cb' },
 			{ code: 200, data: { taskId: 't' } },
 		);
-		await handleMusicGeneration.call(ctx as unknown as IExecuteFunctions, 'extend', 0).catch(() => undefined);
-		const call = ctx.helpers.httpRequestWithAuthentication.mock.calls[0];
-		if (call) expect(call[1].body).not.toHaveProperty('continueAt');
+		await handleMusicGeneration.call(ctx as unknown as IExecuteFunctions, 'extend', 0);
+		expect(ctx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
+		expect(ctx.helpers.httpRequestWithAuthentication.mock.calls[0][1].body).not.toHaveProperty('continueAt');
 	});
 });
 
