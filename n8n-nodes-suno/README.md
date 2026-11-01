@@ -54,7 +54,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 | Lyrics | Get Timestamped Lyrics | Retrieve timestamped lyrics for an existing track |
 | Vocal Separation | Generate | Separate vocals and instruments into stems |
 | Audio Conversion | Convert WAV | Convert audio to WAV format |
-| Audio Conversion | Generate MIDI | Generate a MIDI file from audio |
+| Audio Conversion | Generate MIDI | Start a MIDI transcription of a track. Get MIDI Details returns the notes per instrument as JSON, not a .mid file, so convert them before importing into a DAW |
 | Audio Conversion | Generate Video | Generate a music video (MP4) from audio |
 | Style Boost | Generate | Enhance a music style description |
 | Cover Image | Generate | Generate cover artwork for a track |

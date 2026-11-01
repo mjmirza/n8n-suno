@@ -20,7 +20,7 @@ export const audioConversionOperations: INodeProperties[] = [{
 		{
 			name: 'Generate MIDI',
 			value: 'generateMidi',
-			description: 'Generate a MIDI file from audio',
+			description: 'Start a MIDI transcription, returned as JSON note data per instrument',
 			action: 'Generate MIDI',
 		},
 		{
