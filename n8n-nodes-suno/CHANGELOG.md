@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0] - 2026-11-01
+
+### Fixed
+- A body-level rate limit (code 405 or 430 in an HTTP 200 response) honors Retry-After. A wait over 60 seconds stops the node with the requested wait in the message. Previously it retried after about a second.
+- Upload and Cover accepts prompts up to the custom-mode limit (5000 characters, 3000 on V4). The endpoint always runs in custom mode. Previously the 3000-character simple limit applied when Custom Mode was off.
+- The credential test fails on every documented Suno error code, including maintenance (455) and server errors (500, 501). Previously only 401 failed it.
+- Field descriptions state the current limits. The simple prompt allows 3000 characters, and titles allow 80 or 100 characters depending on the operation.
+- The README first-song steps include the required Callback URL.
+
+### Removed
+- The Category field. No code read it, so it never changed what the node did. Resource and operation values are unchanged. See docs/DESIGN-DECISIONS.md.
+
+### Changed
+- Coverage thresholds are back at 99% statements, 97% branches, 100% functions and 100% lines, and the suite now reaches 100% on all four. Two unreachable branches were removed.
+- A round-2 regression test now requires the request it checks. Previously it passed with zero assertions when Extend threw early.
+
 ## [1.4.0] - 2026-11-01
 
 ### Added

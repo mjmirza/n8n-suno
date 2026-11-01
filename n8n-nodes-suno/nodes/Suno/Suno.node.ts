@@ -9,7 +9,7 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 // Descriptions
-import { CATEGORIES, buildResourceProperty } from './utils/descriptions';
+import { buildResourceProperty } from './utils/descriptions';
 
 // Operations
 import { musicGenerationOperations } from './resources/musicGeneration/musicGeneration.operations';
@@ -98,8 +98,6 @@ export class Suno implements INodeType {
 			},
 		],
 		properties: [
-			// Category selector
-			CATEGORIES,
 			// Resource selector
 			buildResourceProperty(),
 

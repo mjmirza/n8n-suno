@@ -2,9 +2,15 @@
 
 ## Coverage thresholds
 
-**Decision.** `jest.config.js` sets the global coverage thresholds to the measured floor (97% statements and lines, 88% branches, 98% functions), and CI plus the publish workflow run `npm run test:coverage`, so a release fails if coverage drops below them.
+**Decision.** `jest.config.js` requires 99% statements, 97% branches, 100% functions and 100% lines, and CI plus the publish workflow run `npm run test:coverage`, so a release fails if coverage drops below them. Since 1.5.0 the suite reaches 100% on all four.
 
-**Why.** Before 1.4.0 the thresholds were 99, 97, 100 and 100, but no workflow ran Jest with coverage, so they never gated anything. Enforcing those numbers would have failed every build, because measured coverage is 97.4% statements and 88.9% branches. A gate set at the real floor stops regressions today. Raise the numbers as tests are added, never lower them.
+**History.** Before 1.4.0 these thresholds existed but no workflow ran Jest with coverage, so they gated nothing. 1.4.0 enforced them at a lowered floor. 1.5.0 restores the original numbers, backed by tests for every branch. Two unreachable branches were removed instead of tested: a dotted IPv4 tail in an IPv4-mapped IPv6 host, which WHATWG URL parsing always rewrites as hex groups, and a duplicate check in the Resource list, which a test now pins as duplicate-free.
+
+## Category selector removed
+
+**Decision.** 1.5.0 removes the Category field. No code ever read it, so it changed nothing at run time.
+
+**Why not make it filter resources.** Saved workflows store only non-default values. A workflow whose resource sits outside the default category stores no category, so a filtering Category would show the default group and hide the saved resource. Removing the field keeps every saved workflow's resource and operation, and n8n drops the unused stored value on load.
 
 ## Title length per endpoint
 
