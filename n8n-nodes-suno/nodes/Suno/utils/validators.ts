@@ -106,9 +106,6 @@ export function assertDurationRange(startS: number, endS: number): void {
 	if (duration < 10) {
 		throw new Error(`Replacement duration must be at least 10 seconds (got ${duration.toFixed(2)})`);
 	}
-	if (duration > 60) {
-		throw new Error(`Replacement duration must not exceed 60 seconds (got ${duration.toFixed(2)})`);
-	}
 }
 
 export function assertVocalSegment(start: number, end: number): void {

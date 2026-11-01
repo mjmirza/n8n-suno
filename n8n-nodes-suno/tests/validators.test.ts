@@ -212,8 +212,8 @@ describe('assertDurationRange', () => {
 		expect(() => assertDurationRange(10, 19)).toThrow('at least 10 seconds');
 	});
 
-	it('rejects duration over 60 seconds (10, 71)', () => {
-		expect(() => assertDurationRange(10, 71)).toThrow('must not exceed 60 seconds');
+	it('leaves the upper limit to the API, which caps it at half the track (10, 71)', () => {
+		expect(() => assertDurationRange(10, 71)).not.toThrow();
 	});
 
 	it('rejects start >= end (20, 10)', () => {
