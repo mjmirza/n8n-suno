@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.1] - 2026-11-01
+
+### Fixed
+- URL validation no longer calls `URL.canParse`, which Node.js added in 18.17. Older Node.js 18 runtimes failed every operation that checks a URL.
+
+### Changed
+- package.json declares Node.js 18 or newer, and the README says so. Upload Stream relies on the FormData and Blob built into Node.js 18, so early n8n 1.x installs on Node.js 16 are not supported.
+- CI and the publish workflow run the built node on Node.js 18, 20, 22 and 24 before a release.
+
 ## [1.7.0] - 2026-11-01
 
 ### Added

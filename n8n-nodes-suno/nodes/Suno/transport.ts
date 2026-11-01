@@ -119,6 +119,15 @@ export function sanitizeEndpoint(endpoint: string): string {
 	return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 }
 
+/** Parses a URL without URL.canParse, which needs Node 18.17 and older n8n 1.x runtimes lack. */
+function parseUrl(url: string): URL | undefined {
+	try {
+		return new URL(url);
+	} catch {
+		return undefined;
+	}
+}
+
 export function assertValidUrl(url: string, label: string): void {
 	if (!url || typeof url !== 'string') {
 		throw new Error(`${label} is required`);
@@ -127,7 +136,7 @@ export function assertValidUrl(url: string, label: string): void {
 		throw new Error(`${label} exceeds maximum length of ${MAX_URL_LENGTH} characters`);
 	}
 
-	const parsed = URL.canParse(url) ? new URL(url) : undefined;
+	const parsed = parseUrl(url);
 	if (!parsed) {
 		throw new Error(`${label} is not a valid URL`);
 	}

@@ -5,7 +5,7 @@ import tsParser from '@typescript-eslint/parser';
 import n8nNodesPlugin from 'eslint-plugin-n8n-nodes-base';
 
 export default defineConfig(
-	{ ignores: ['dist/**', 'node_modules/**', 'tests/**', 'coverage/**', 'scripts/**', '*.config.*', 'package-lock.json'] },
+	{ ignores: ['dist/**', 'node_modules/**', 'tests/**', 'runtime-test/**', 'coverage/**', 'scripts/**', '*.config.*', 'package-lock.json'] },
 	n8nCommunityNodesPlugin.configs.recommended,
 	{ rules: { 'no-console': 'error' } },
 	{ plugins: { 'n8n-nodes-base': n8nNodesPlugin } },
