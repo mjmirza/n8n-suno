@@ -38,7 +38,6 @@ async function addVocals(
 
 	// Validate required fields
 	assertValidUploadUrl(uploadUrl);
-	assertNonEmpty(prompt, 'Prompt');
 	assertNonEmpty(title, 'Title', 100);
 	assertNonEmpty(style, 'Style');
 	assertNonEmpty(negativeTags, 'Negative Tags');
@@ -46,7 +45,6 @@ async function addVocals(
 
 	const body: IDataObject = {
 		uploadUrl,
-		prompt,
 		title: title.trim(),
 		style,
 		negativeTags,
@@ -54,6 +52,10 @@ async function addVocals(
 	};
 
 	// Optional fields
+	if (prompt && prompt.trim()) {
+		body.prompt = prompt;
+	}
+
 	const vocalGender = this.getNodeParameter('vocalGender', itemIndex, '') as string;
 	if (vocalGender) {
 		body.vocalGender = vocalGender;

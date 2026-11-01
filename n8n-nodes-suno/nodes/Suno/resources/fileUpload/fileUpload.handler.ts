@@ -1,4 +1,4 @@
-import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
+import type { IDataObject, IExecuteFunctions, IHttpRequestOptions } from 'n8n-workflow';
 
 import { sunoUploadRequest, assertNonEmpty, assertValidUrl } from '../../transport';
 import { assertBase64Data } from '../../utils/validators';
@@ -67,19 +67,17 @@ async function uploadStream(
 	const binaryData = this.helpers.assertBinaryData(itemIndex, binaryPropertyName);
 	const dataBuffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryPropertyName);
 
-	const formData: IDataObject = {
-		file: {
-			value: dataBuffer,
-			options: {
-				filename: fileName || binaryData.fileName || 'upload',
-				contentType: binaryData.mimeType,
-			},
-		},
-		uploadPath,
-	};
-
+	// A real multipart body. The file goes in a binary part named `file`, as the API expects.
+	// The HTTP client sets the multipart Content-Type with its boundary.
+	const formData = new FormData();
+	formData.append(
+		'file',
+		new Blob([new Uint8Array(dataBuffer)], { type: binaryData.mimeType || 'application/octet-stream' }),
+		fileName || binaryData.fileName || 'upload',
+	);
+	formData.append('uploadPath', uploadPath);
 	if (fileName) {
-		formData.fileName = fileName;
+		formData.append('fileName', fileName);
 	}
 
 	const response = await sunoUploadRequest.call(
@@ -88,12 +86,7 @@ async function uploadStream(
 		'/api/file-stream-upload',
 		undefined,
 		undefined,
-		{
-			body: formData,
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
-		},
+		{ body: formData as unknown as IHttpRequestOptions['body'] },
 	);
 	return response as IDataObject;
 }

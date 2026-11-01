@@ -1,6 +1,6 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { sunoRequest } from '../../transport';
-import { assertSafeId } from '../../transport';
+import { assertNonEmpty, assertSafeId } from '../../transport';
 import {
 	assertValidCallbackUrl,
 	assertValidUploadUrl,
@@ -399,10 +399,12 @@ async function handleReplaceSection(
 	const title = this.getNodeParameter('title', itemIndex) as string;
 	const infillStartS = this.getNodeParameter('infillStartS', itemIndex) as number;
 	const infillEndS = this.getNodeParameter('infillEndS', itemIndex) as number;
+	const fullLyrics = this.getNodeParameter('fullLyrics', itemIndex, '') as string;
 
 	assertSafeId(taskId, 'Task ID');
 	assertSafeId(audioId, 'Audio ID');
 	assertDurationRange(infillStartS, infillEndS);
+	assertNonEmpty(fullLyrics, 'Full Lyrics');
 
 	const body: IDataObject = {
 		taskId,
@@ -412,6 +414,7 @@ async function handleReplaceSection(
 		title,
 		infillStartS,
 		infillEndS,
+		fullLyrics,
 	};
 
 	const negativeTags = this.getNodeParameter('negativeTags', itemIndex, '') as string;

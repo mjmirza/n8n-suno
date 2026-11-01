@@ -16,7 +16,13 @@ export const SUNO_BASE_URL = 'https://api.sunoapi.org';
 export const SUNO_UPLOAD_BASE_URL = 'https://sunoapiorg.redpandaai.co';
 
 const MAX_RETRIES = 3;
-const RETRY_CODES = new Set([429, 430, 502, 503, 504]);
+// Codes a request was rejected with before Suno did any work, so any method may resend.
+const RATE_LIMIT_CODES = new Set([430]);
+// Codes where a write may already have been accepted. Only safe methods resend.
+const TRANSIENT_CODES = new Set([429, 502, 503, 504]);
+// Body code 429 means insufficient credits. Retrying cannot succeed.
+const NO_RETRY_BODY_CODES = new Set([429]);
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const BASE_DELAY_MS = 1_000;
 const MAX_ERROR_LENGTH = 1_000;
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -61,7 +67,33 @@ const PRIVATE_IP_RANGES = [
 	/^0\.0\.0\.0$/,
 ];
 
-const PRIVATE_IPV6 = ['::1', 'fc00::', 'fe80::'];
+PRIVATE_IP_RANGES.push(/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, /^(22[4-9]|2[3-5]\d)\./);
+
+function isPrivateIpv4(host: string): boolean {
+	return PRIVATE_IP_RANGES.some((range) => range.test(host));
+}
+
+/** Returns true for loopback, unspecified, unique local, link local and IPv4-mapped private IPv6. */
+function isPrivateIpv6(host: string): boolean {
+	const h = host.toLowerCase();
+	if (h === '::' || h === '::1') return true;
+	if (/^f[cd][0-9a-f]{0,2}:/.test(h)) return true;
+	if (/^fe[89ab][0-9a-f]?:/.test(h)) return true;
+	const mapped = /^::ffff:(?:0:)?(.+)$/.exec(h);
+	if (mapped) {
+		const tail = mapped[1];
+		if (tail.includes('.')) return isPrivateIpv4(tail);
+		const groups = tail.split(':');
+		if (groups.length === 2) {
+			const hi = parseInt(groups[0], 16);
+			const lo = parseInt(groups[1], 16);
+			const v4 = [hi >> 8, hi & 255, lo >> 8, lo & 255].join('.');
+			return isPrivateIpv4(v4);
+		}
+		return true;
+	}
+	return false;
+}
 
 export function assertSafeId(value: string, label: string): void {
 	if (!value || typeof value !== 'string') {
@@ -103,22 +135,18 @@ export function assertValidUrl(url: string, label: string): void {
 		throw new Error(`${label} must use HTTPS`);
 	}
 
-	const hostname = parsed.hostname.toLowerCase();
+	const hostname = parsed.hostname.toLowerCase().replace(/\.$/, '');
 
-	if (hostname === 'localhost' || hostname === '0.0.0.0') {
+	if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '0.0.0.0') {
 		throw new Error(`${label} must not point to a local address`);
 	}
 
-	for (const range of PRIVATE_IP_RANGES) {
-		if (range.test(hostname)) {
-			throw new Error(`${label} must not point to a private IP address`);
-		}
+	if (isPrivateIpv4(hostname)) {
+		throw new Error(`${label} must not point to a private IP address`);
 	}
 
-	for (const prefix of PRIVATE_IPV6) {
-		if (hostname.startsWith(prefix) || hostname === '[::1]') {
-			throw new Error(`${label} must not point to a private IPv6 address`);
-		}
+	if (hostname.startsWith('[') && isPrivateIpv6(hostname.slice(1, -1))) {
+		throw new Error(`${label} must not point to a private IPv6 address`);
 	}
 }
 
@@ -203,7 +231,12 @@ async function makeRequest(
 		options.qs = qs;
 	}
 
+	const safeMethod = SAFE_METHODS.has(String(method).toUpperCase());
+	const canRetry = (code: number) =>
+		RATE_LIMIT_CODES.has(code) || (safeMethod && TRANSIENT_CODES.has(code));
+
 	let lastError: unknown;
+	let bodyError: NodeApiError | undefined;
 
 	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
 		try {
@@ -218,39 +251,46 @@ async function makeRequest(
 				const code = resp.code as number | undefined;
 
 				if (code !== undefined && code !== 200) {
-					if (RETRY_CODES.has(code) && attempt < MAX_RETRIES) {
-						const delay = jitteredDelay(attempt);
-						await sleep(delay);
+					if (!NO_RETRY_BODY_CODES.has(code) && canRetry(code) && attempt < MAX_RETRIES) {
+						await sleep(jitteredDelay(attempt));
 						continue;
 					}
-					throw new NodeApiError(ctx.getNode(), response as JsonObject, {
+					bodyError = new NodeApiError(ctx.getNode(), response as JsonObject, {
 						message: parseErrorResponse(response),
 						httpCode: String(code),
 					});
+					throw bodyError;
 				}
 			}
 
 			return response;
 		} catch (error) {
+			// The retry decision for a body-level code was already made above.
+			if (error === bodyError) throw new NodeApiError(ctx.getNode(), bodyError as unknown as JsonObject);
 			lastError = error;
 
 			if (error instanceof NodeApiError) {
 				const httpCode = Number((error as NodeApiError & { httpCode?: string }).httpCode);
-				if (RETRY_CODES.has(httpCode) && attempt < MAX_RETRIES) {
-					const retryAfter = (error as NodeApiError & { headers?: Record<string, string> }).headers?.['retry-after'];
-					const delay = retryAfter ? Number(retryAfter) * 1_000 : jitteredDelay(attempt);
+				if (canRetry(httpCode) && attempt < MAX_RETRIES) {
+					const retryAfter = Number(
+						(error as NodeApiError & { headers?: Record<string, string> }).headers?.['retry-after'],
+					);
+					const delay = Number.isFinite(retryAfter) && retryAfter > 0
+						? Math.min(retryAfter, 60) * 1_000
+						: jitteredDelay(attempt);
 					await sleep(delay);
 					continue;
 				}
-				// NodeApiError's constructor returns an existing NodeApiError unchanged.
+				// The constructor returns an existing NodeApiError unchanged.
 				throw new NodeApiError(ctx.getNode(), error as unknown as JsonObject);
 			}
 
-			if (attempt < MAX_RETRIES) {
-				const delay = jitteredDelay(attempt);
-				await sleep(delay);
+			// A network failure on a write may have reached Suno, so only safe methods resend.
+			if (safeMethod && attempt < MAX_RETRIES) {
+				await sleep(jitteredDelay(attempt));
 				continue;
 			}
+			break;
 		}
 	}
 
@@ -258,7 +298,7 @@ async function makeRequest(
 		throw lastError;
 	}
 	throw new NodeApiError(ctx.getNode(), (lastError ?? {}) as JsonObject, {
-		message: 'Suno API request failed after retries',
+		message: 'Suno API request failed',
 	});
 }
 
