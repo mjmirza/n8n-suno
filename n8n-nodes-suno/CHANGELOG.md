@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0] - 2026-11-01
+
+### Fixed
+- Paid generations are never submitted twice. Previously every POST was retried on a gateway timeout or network error, so a request Suno had already accepted could start and bill a second task. Now writes retry only when Suno rejects them for request frequency (code 430). Reads still retry on 502, 503 and 504.
+- Insufficient credits (code 429) is no longer retried. Previously it was retried three times with backoff before failing, which could never succeed.
+- Get Credits returns `{ "credits": 100 }`. Previously the documented integer response was emitted as a bare number, which is not valid n8n item JSON. Any other non-object `data` is now wrapped as `{ "data": value }`.
+- Upload Stream sends a real multipart body with the file in a binary part named `file`. Previously the file was sent as a nested object that the HTTP client serialized as `file[value]` fields, which the upload API rejects.
+- Replace Section sends `fullLyrics`. Previously the node had no field for it, so every request was missing a parameter the API requires. A required Full Lyrics field is added for the complete song lyrics after the change.
+- Add Vocals no longer requires a prompt. The API documents it as optional, previously the node blocked prompt-free requests. An empty prompt is now left out of the request.
+- API errors carry the failing item index. Previously the index was dropped because the error was passed back through its own constructor, so the 1.1.0 changelog claim did not hold.
+- Private address blocking covers bracketed IPv6. Previously `[fc00::]`, `[fe80::]`, `[::]` and IPv4-mapped loopback such as `[::ffff:127.0.0.1]` passed, now they are rejected along with carrier-grade NAT (100.64.0.0/10), multicast and `*.localhost`.
+- `Suno.node.json` ships in the package. Previously the build copied only icons, so the node's category and documentation metadata never reached n8n.
+
+### Changed
+- The publish workflow runs build, typecheck, lint, tests, the README match and the metadata check before publishing. Previously it ran only tests, so a tag could publish what CI would reject.
+- Retry behavior is tested with real mocked requests. Previously the retry tests only checked error message strings.
+
 ## [1.1.0] - 2026-11-01
 
 ### Changed

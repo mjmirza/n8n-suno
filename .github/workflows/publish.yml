@@ -29,7 +29,15 @@ jobs:
       - name: Tag matches package.json version
         run: test "v$(node -p 'require("./package.json").version')" = "${GITHUB_REF_NAME}"
       - run: npm ci
+      # The same gates as CI, so a tag cannot publish what main would reject.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
+      - name: Root and package READMEs match
+        run: cmp ../README.md README.md
+      - name: Node metadata ships in the package
+        run: test -f dist/nodes/Suno/Suno.node.json
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

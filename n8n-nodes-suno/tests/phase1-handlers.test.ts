@@ -365,6 +365,7 @@ describe('handleMusicGeneration', () => {
 			title: 'Song Title',
 			infillStartS: 10,
 			infillEndS: 30,
+			fullLyrics: 'Verse one\nNew section lyrics\nChorus',
 			negativeTags: '',
 			callBackUrl: '',
 		};
@@ -384,7 +385,14 @@ describe('handleMusicGeneration', () => {
 				title: 'Song Title',
 				infillStartS: 10,
 				infillEndS: 30,
+				fullLyrics: 'Verse one\nNew section lyrics\nChorus',
 			});
+		});
+
+		it('rejects an empty fullLyrics before any request', async () => {
+			const ctx = createMockContext({ ...baseParams, fullLyrics: '  ' });
+			await expect(callHandler(handleMusicGeneration, ctx, 'replaceSection')).rejects.toThrow('Full Lyrics');
+			expect(mockSunoRequest).not.toHaveBeenCalled();
 		});
 
 		it('includes callBackUrl when provided', async () => {

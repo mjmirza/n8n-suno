@@ -586,6 +586,22 @@ const replaceSectionInfillEndS: INodeProperties = {
 	},
 };
 
+const replaceSectionFullLyrics: INodeProperties = {
+	displayName: 'Full Lyrics',
+	name: 'fullLyrics',
+	type: 'string',
+	typeOptions: { rows: 6 },
+	default: '',
+	required: true,
+	description: 'Complete lyrics of the whole song after the replacement, as the API requires',
+	displayOptions: {
+		show: {
+			resource: ['musicGeneration'],
+			operation: ['replaceSection'],
+		},
+	},
+};
+
 const replaceSectionNegativeTags: INodeProperties = {
 	displayName: 'Negative Tags',
 	name: 'negativeTags',
@@ -690,6 +706,7 @@ export const musicGenerationFields: INodeProperties[] = [
 	replaceSectionTitle,
 	replaceSectionInfillStartS,
 	replaceSectionInfillEndS,
+	replaceSectionFullLyrics,
 	replaceSectionNegativeTags,
 	callBackUrlField(['musicGeneration'], ['replaceSection'], false),
 ];

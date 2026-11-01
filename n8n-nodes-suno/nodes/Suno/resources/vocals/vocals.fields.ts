@@ -26,8 +26,7 @@ const addVocalsPrompt: INodeProperties = {
 	name: 'prompt',
 	type: 'string',
 	default: '',
-	required: true,
-	description: 'Vocal generation prompt describing the desired vocals',
+	description: 'Optional lyrics or vocal prompt. Leave empty to let Suno write vocals from the source audio.',
 	displayOptions: {
 		show: {
 			resource: ['vocals'],

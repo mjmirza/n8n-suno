@@ -25,7 +25,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 - **A song from a prompt in one workflow step.** No copying files between the Suno site and your other tools.
 - **Every Suno operation in one node.** 28 operations across music, vocals, lyrics, stems, WAV, MIDI, video, cover art, personas, uploads and credits.
 - **Results that land where you need them.** Every output stays linked to the input item that produced it, so downstream nodes always know which song belongs to which row.
-- **Fewer failed runs.** Rate limits and temporary Suno outages are retried automatically with backoff, and real errors show a clear message in n8n.
+- **Fewer failed runs, no double charges.** Rate limits are retried automatically with backoff. Temporary outages are retried for reads only, so a paid generation is never submitted twice, and real errors show a clear message in n8n.
 - **Safe by default.** Only HTTPS URLs are accepted, private network addresses are blocked, and your API key is never echoed in errors.
 - **Works with the AI Agent node.** The node is usable as a tool, so an agent can generate music on request.
 - **Verifiable releases.** Every version is built in GitHub Actions and published with a signed npm provenance statement that links it to its exact source commit.
@@ -45,7 +45,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 | Music Generation | Extend Music | Extend an existing music track |
 | Music Generation | Generate Mashup | Generate a mashup from two audio tracks |
 | Music Generation | Generate Music | Generate a new music track from a prompt |
-| Music Generation | Replace Section | Replace a section of an existing track |
+| Music Generation | Replace Section | Replace a section of an existing track, sending the full updated lyrics |
 | Music Generation | Upload and Cover Audio | Upload audio and generate a cover version |
 | Music Generation | Upload and Extend Audio | Upload audio and extend it with AI |
 | Vocals | Add Vocals | Add vocals to an uploaded audio file |
