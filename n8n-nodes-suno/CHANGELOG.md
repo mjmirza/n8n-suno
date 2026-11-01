@@ -3,12 +3,12 @@
 ## [1.7.4] - 2026-11-01
 
 ### Fixed
-- A secret that a response echoes as a property name is now masked in the error data too. Previously only values were masked.
-- A secret echoed as the response `code` is masked in the error's HTTP code as well.
+- A secret that a response repeats as a property name is now masked in the error data too. Previously only values were masked.
+- A secret repeated as the response `code` is masked in the error's HTTP code as well.
 - Generate Persona, Generate Mashup and Replace Section retry a body code 429, which those endpoints document as a rate limit, and label it a rate limit. Previously it was shown as "Insufficient credits" and never retried. On every other endpoint 429 still means insufficient credits.
 - Generate Persona rejects a negative vocal start or end, and the editor does not allow them. The API requires both to be 0 or more.
 - Extend Music and Upload and Extend reject a negative Continue At instead of silently leaving it out, and the editor does not allow one.
-- The configured API key is masked wherever a successful response echoes it, for example in a task's error message. Other output is unchanged.
+- The configured API key is masked wherever a successful response repeats it, for example in a task's error message. Other output is unchanged.
 - A successful HTTP status with a body that is not a JSON envelope, such as a gateway's HTML error page, is now an error. Previously the item reported `{ "success": true }`.
 - A JSON body without Suno's status code, such as `{}` or an array, is an error rather than a success.
 - A long error message is masked before it is shortened, so no fragment of the API key survives the cut.
