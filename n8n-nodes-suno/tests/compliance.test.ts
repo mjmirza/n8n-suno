@@ -34,7 +34,8 @@ describe('Base URL Constants', () => {
 // RETRY_CODES verification
 // ===========================================================================
 
-describe('RETRY_CODES', () => {
+// Retry behavior itself is exercised with real mocked requests in codex-review.test.ts.
+describe('retry-related error messages', () => {
 	// We cannot import the Set directly since it is not exported,
 	// but we can verify through the transport module source that it exists.
 	// Instead, we verify the behavior: the module exports parseErrorResponse

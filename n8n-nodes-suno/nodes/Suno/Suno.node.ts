@@ -155,10 +155,14 @@ export class Suno implements INodeType {
 					const data = (result as IDataObject).data !== undefined
 						? (result as IDataObject).data
 						: result;
+					const asJson = (value: unknown): IDataObject =>
+						value !== null && typeof value === 'object' && !Array.isArray(value)
+							? (value as IDataObject)
+							: { data: value as IDataObject[keyof IDataObject] };
 					if (Array.isArray(data)) {
-						returnData.push(...(data as IDataObject[]).map((item) => ({ json: item, pairedItem })));
+						returnData.push(...data.map((item) => ({ json: asJson(item), pairedItem })));
 					} else {
-						returnData.push({ json: data as IDataObject, pairedItem });
+						returnData.push({ json: asJson(data), pairedItem });
 					}
 				}
 			} catch (error) {
@@ -168,8 +172,9 @@ export class Suno implements INodeType {
 						pairedItem: { item: i },
 					});
 				} else if (error instanceof NodeApiError) {
-					// NodeApiError's constructor returns an existing NodeApiError unchanged.
-					throw new NodeApiError(this.getNode(), error as unknown as JsonObject, { itemIndex: i });
+					// The NodeApiError constructor ignores options for an existing instance, so set the index directly.
+					error.context = { ...error.context, itemIndex: i };
+					throw new NodeApiError(this.getNode(), error as unknown as JsonObject);
 				} else {
 					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 				}

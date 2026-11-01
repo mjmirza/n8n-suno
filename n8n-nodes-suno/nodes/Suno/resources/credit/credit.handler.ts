@@ -11,6 +11,11 @@ export async function handleCredit(
 		throw new Error(`Unknown credit operation: ${operation}`);
 	}
 
-	const response = await sunoRequest.call(this, 'GET', '/api/v1/generate/credit');
-	return response as IDataObject;
+	const response = (await sunoRequest.call(this, 'GET', '/api/v1/generate/credit')) as IDataObject;
+	// The API returns the balance as a bare number in `data`.
+	const balance = response?.data;
+	if (typeof balance === 'number') {
+		return { credits: balance };
+	}
+	return response;
 }
