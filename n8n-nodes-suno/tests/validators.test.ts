@@ -48,12 +48,12 @@ describe('assertPromptLength', () => {
 		expect(() => assertPromptLength('', 'V4', false)).not.toThrow();
 	});
 
-	it('non-custom mode: accepts prompt up to 500 chars', () => {
-		expect(() => assertPromptLength('a'.repeat(500), 'V4', false)).not.toThrow();
+	it('non-custom mode: accepts prompt up to 3000 chars, as the Generate docs allow', () => {
+		expect(() => assertPromptLength('a'.repeat(3000), 'V4', false)).not.toThrow();
 	});
 
-	it('non-custom mode: rejects prompt over 500 chars', () => {
-		expect(() => assertPromptLength('a'.repeat(501), 'V4', false)).toThrow('exceeds maximum length of 500');
+	it('non-custom mode: rejects prompt over 3000 chars', () => {
+		expect(() => assertPromptLength('a'.repeat(3001), 'V5', false)).toThrow('exceeds maximum length of 3000');
 	});
 
 	it('custom V4: accepts prompt up to 3000 chars', () => {

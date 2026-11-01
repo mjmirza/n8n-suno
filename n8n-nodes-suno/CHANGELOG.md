@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0] - 2026-11-01
+
+### Added
+- The V6, V6 Mini and V6 Wild models, the current Suno models, plus V5.5. The default stays V5, so saved workflows keep their model.
+
+### Fixed
+- Simple-mode Generate cuts a prompt used as the style to the model's style limit, 200 characters on V4. Previously a long prompt was sent as an oversized style.
+- Simple-mode Generate no longer sends Negative Tags, Vocal Gender or the weights, which the API accepts only in custom mode. The fields are now shown only in custom mode.
+- Simple-mode prompts may be up to 3000 characters, as the Generate docs allow. Previously anything over 500 was rejected.
+- Title limits follow each endpoint. Generate, Upload and Cover and Mashup allow 80 characters, Extend and Upload and Extend allow 100.
+- A GET that fails with a connection error such as ECONNRESET is retried. Previously n8n's error wrapper made it fail at once.
+- Retry-After works on real n8n. The node reads the full response, so the header is not lost when n8n wraps an HTTP error. A wait over 60 seconds stops the node with the requested wait in the message.
+
+### Changed
+- CI and the publish workflow run tests with coverage, so the coverage thresholds now gate every release. They are set to the measured floor, see docs/DESIGN-DECISIONS.md.
+- Security tests fail when a validator stops throwing. Previously they called the undefined `fail()`, which threw a ReferenceError that satisfied the test.
+- The README lists the Suno operations the node does not cover yet.
+
 ## [1.3.0] - 2026-11-01
 
 ### Fixed

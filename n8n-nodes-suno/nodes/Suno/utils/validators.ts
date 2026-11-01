@@ -5,6 +5,10 @@ import { assertValidUrl, assertInRange } from '../transport';
 // ---------------------------------------------------------------------------
 
 const PROMPT_LIMITS: Record<string, number> = {
+	V6: 5_000,
+	V6_MINI: 5_000,
+	V6_WILD: 5_000,
+	V5_5: 5_000,
 	V4: 3_000,
 	V4_5: 5_000,
 	V4_5PLUS: 5_000,
@@ -13,6 +17,10 @@ const PROMPT_LIMITS: Record<string, number> = {
 };
 
 const STYLE_LIMITS: Record<string, number> = {
+	V6: 1_000,
+	V6_MINI: 1_000,
+	V6_WILD: 1_000,
+	V5_5: 1_000,
 	V4: 200,
 	V4_5: 1_000,
 	V4_5PLUS: 1_000,
@@ -28,7 +36,8 @@ const TITLE_LIMITS: Record<string, number> = {
 	V5: 100,
 };
 
-const NON_CUSTOM_PROMPT_LIMIT = 500;
+// docs.sunoapi.org/suno-api/generate-music: the non-custom prompt allows 3000 characters on every model.
+const NON_CUSTOM_PROMPT_LIMIT = 3_000;
 
 // ---------------------------------------------------------------------------
 // URL validators
@@ -60,11 +69,15 @@ export function assertPromptLength(prompt: string, model: string, customMode: bo
 	}
 }
 
+export function styleLimit(model: string): number {
+	return STYLE_LIMITS[model] ?? 1_000;
+}
+
 export function assertStyleLength(style: string, model: string): void {
 	if (!style || typeof style !== 'string') {
 		return;
 	}
-	const maxLength = STYLE_LIMITS[model] ?? 1_000;
+	const maxLength = styleLimit(model);
 	if (style.length > maxLength) {
 		throw new Error(
 			`Style exceeds maximum length of ${maxLength} characters for model ${model} (got ${style.length})`,
@@ -72,11 +85,12 @@ export function assertStyleLength(style: string, model: string): void {
 	}
 }
 
-export function assertTitleLength(title: string, model: string): void {
+/** An endpoint with one documented title limit for every model passes it as `endpointLimit`. */
+export function assertTitleLength(title: string, model: string, endpointLimit?: number): void {
 	if (!title || typeof title !== 'string') {
 		return;
 	}
-	const maxLength = TITLE_LIMITS[model] ?? 100;
+	const maxLength = endpointLimit ?? TITLE_LIMITS[model] ?? 100;
 	if (title.length > maxLength) {
 		throw new Error(
 			`Title exceeds maximum length of ${maxLength} characters for model ${model} (got ${title.length})`,
