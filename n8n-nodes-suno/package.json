@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-suno",
-	"version": "1.7.2",
+	"version": "1.7.3",
 	"description": "n8n community node for the Suno AI Music Generation API — generate music, lyrics, audio processing, and more",
 	"keywords": [
 		"n8n-community-node-package",
@@ -65,7 +65,7 @@
 		"typescript": "^6.0.3"
 	},
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=18.17.0"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"

@@ -48,9 +48,9 @@ jobs:
       matrix:
         include:
           - node: 18
-            workflow: 1.120.35
+            workflow: 1.83.0
           - node: 20
-            workflow: 1.120.35
+            workflow: 1.83.0
           - node: 22
             workflow: lockfile
           - node: 24

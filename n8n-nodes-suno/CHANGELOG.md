@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.3] - 2026-11-01
+
+### Fixed
+- A failed request that is not an HTTP error, such as an expired certificate or a proxy failure, shows its original reason in the error description. Previously only "Suno API request failed" remained.
+- Replace Section rejects negative start and end times, and the editor does not allow them. The API requires both to be 0 or more.
+
+### Changed
+- The README states the real floor, n8n 1.85 or newer on Node.js 18.17 or newer. Older n8n 1.x cannot load the node, because its `n8n-workflow` lacks `NodeConnectionTypes`, which n8n's community node rules require. CI and publish now run the built node against `n8n-workflow` 1.83.0, the oldest supported. See docs/DESIGN-DECISIONS.md.
+
 ## [1.7.2] - 2026-11-01
 
 ### Changed

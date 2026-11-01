@@ -83,10 +83,10 @@ The node uses one credential, **Suno API**.
 
 ## Compatibility
 
-- n8n 1.x and 2.x on Node.js 18 or newer, community nodes API version 1. Upload Stream uses the FormData and Blob built into Node.js 18, so early n8n 1.x installs on Node.js 16 are not supported.
+- n8n 1.85 or newer, including 2.x, on Node.js 18.17 or newer, community nodes API version 1. n8n 1.85 is the first release whose `n8n-workflow` (1.83.0) exports `NodeConnectionTypes`, which n8n's community node rules require. n8n 1.85 itself needs Node.js 18.17.
 - Self-hosted n8n today. n8n Cloud once the package is verified by n8n.
 - No runtime dependencies. The package only uses the n8n workflow API.
-- Built and unit tested against `n8n-workflow` 2.16 on Node.js 24. The built node is also run on Node.js 18 and 20 with `n8n-workflow` 1.120, and on 22 and 24 with 2.16, before every release.
+- Built and unit tested against `n8n-workflow` 2.16 on Node.js 24. The built node is also run on Node.js 18 and 20 with `n8n-workflow` 1.83.0, the oldest supported, and on 22 and 24 with 2.16, before every release.
 
 ## Technical overview
 
