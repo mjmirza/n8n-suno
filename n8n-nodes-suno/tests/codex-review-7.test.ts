@@ -76,7 +76,9 @@ describe('masking the configured key and the stack (round 7)', () => {
 describe('current models for vocals (round 7)', () => {
 	it('Add Vocals and Add Instrumental offer V6, V6 Mini and V6 Wild', () => {
 		const models = vocalsFields.filter((f) => f.name === 'model');
-		expect(models.length).toBeGreaterThan(0);
+		for (const operation of ['addVocals', 'addInstrumental']) {
+			expect(models.filter((f) => f.displayOptions?.show?.operation?.includes(operation))).toHaveLength(1);
+		}
 		for (const field of models) {
 			const values = (field.options as Array<{ value: string }>).map((o) => o.value);
 			expect(values).toEqual(expect.arrayContaining(['V6', 'V6_MINI', 'V6_WILD', 'V5', 'V4_5PLUS']));

@@ -20,8 +20,14 @@ const MAX_RETRIES = 3;
 const RATE_LIMIT_CODES = new Set([405, 430]);
 // Codes where a write may already have been accepted. Only safe methods resend.
 const TRANSIENT_CODES = new Set([429, 502, 503, 504]);
-// Body code 429 means insufficient credits. Retrying cannot succeed.
+// On most endpoints body code 429 means insufficient credits. Retrying cannot succeed.
 const NO_RETRY_BODY_CODES = new Set([429]);
+// These endpoints document 429 as rate limited and 402 as insufficient credits.
+const RATE_LIMIT_429_PATHS = new Set([
+	'/api/v1/generate/generate-persona',
+	'/api/v1/generate/mashup',
+	'/api/v1/generate/replace-section',
+]);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const BASE_DELAY_MS = 1_000;
 const MAX_ERROR_LENGTH = 1_000;
@@ -185,22 +191,25 @@ export function assertNonEmpty(value: string, label: string, maxLength?: number)
 // Error parsing
 // ---------------------------------------------------------------------------
 
-export function parseErrorResponse(body: unknown): string {
+export function parseErrorResponse(body: unknown, path?: string, literals: readonly string[] = []): string {
 	if (body && typeof body === 'object') {
 		const obj = body as Record<string, unknown>;
 		const code = obj.code as number | undefined;
 		const msg = obj.msg as string | undefined;
 
 		if (code && SUNO_ERROR_MESSAGES[code]) {
-			const base = SUNO_ERROR_MESSAGES[code];
+			const base =
+				code === 429 && path !== undefined && RATE_LIMIT_429_PATHS.has(path)
+					? 'Rate limit exceeded — slow down'
+					: SUNO_ERROR_MESSAGES[code];
 			if (msg && typeof msg === 'string') {
-				const safeMsg = redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
+				const safeMsg = redactSecrets(msg, literals).slice(0, MAX_ERROR_LENGTH);
 				return `${base}: ${safeMsg}`;
 			}
 			return base;
 		}
 		if (msg && typeof msg === 'string') {
-			return redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
+			return redactSecrets(msg, literals).slice(0, MAX_ERROR_LENGTH);
 		}
 	}
 	return 'Unknown Suno API error';
@@ -274,14 +283,34 @@ export function redactDeep<T>(value: T, literals: readonly string[] = [], seen =
 	seen.add(value as object);
 	if (Array.isArray(value)) return value.map((v) => redactDeep(v, literals, seen, depth + 1)) as unknown as T;
 	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, literals, seen, depth + 1);
+	// Property names are masked too, since a response can echo a secret as a key.
+	for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+		out[redactSecrets(k, literals)] = redactDeep(v, literals, seen, depth + 1);
+	}
 	return out as T;
+}
+
+/** Masks the configured credential wherever a successful response echoes it, in keys and values. Other text is untouched. */
+function maskLiterals<T>(value: T, literals: readonly string[]): T {
+	const present = literals.filter((literal) => JSON.stringify(value).includes(literal));
+	if (present.length === 0) return value;
+	const walk = (v: unknown): unknown => {
+		if (typeof v === 'string') return present.reduce((out, literal) => out.split(literal).join('[redacted]'), v);
+		if (Array.isArray(v)) return v.map(walk);
+		if (v && typeof v === 'object') {
+			const out: Record<string, unknown> = {};
+			for (const [k, inner] of Object.entries(v as Record<string, unknown>)) out[walk(k) as string] = walk(inner);
+			return out;
+		}
+		return v;
+	};
+	return walk(value) as T;
 }
 
 /** Masks tokens in an n8n error in place, across message, stack, description, messages and any response data it holds. */
 function redactError<E extends Error>(error: E, literals: readonly string[]): E {
 	const e = error as unknown as Record<string, unknown>;
-	for (const key of ['message', 'stack', 'description', 'messages', 'context', 'errorResponse', 'cause']) {
+	for (const key of ['message', 'stack', 'description', 'messages', 'context', 'errorResponse', 'cause', 'httpCode']) {
 		if (e[key] !== undefined) e[key] = redactDeep(e[key], literals);
 	}
 	return error;
@@ -331,8 +360,11 @@ async function makeRequest(
 	}
 
 	const safeMethod = SAFE_METHODS.has(String(method).toUpperCase());
+	// A documented 429 rate limit is a rejection before any work, so any method may resend.
+	const limit429 = RATE_LIMIT_429_PATHS.has(safePath);
 	const canRetry = (code: number) =>
-		RATE_LIMIT_CODES.has(code) || (safeMethod && TRANSIENT_CODES.has(code));
+		RATE_LIMIT_CODES.has(code) || (limit429 && code === 429) || (safeMethod && TRANSIENT_CODES.has(code));
+	const noRetryBody = (code: number) => NO_RETRY_BODY_CODES.has(code) && !(limit429 && code === 429);
 
 	// The full response keeps the headers, which n8n drops when it wraps an HTTP error.
 	options.returnFullResponse = true;
@@ -345,7 +377,7 @@ async function makeRequest(
 		thrown = redactError(
 			new NodeApiError(ctx.getNode(), redactDeep(body, literals) as JsonObject, {
 				message: redactSecrets(message, literals),
-				httpCode: String(code),
+				httpCode: redactSecrets(String(code), literals),
 			}),
 			literals,
 		);
@@ -364,7 +396,7 @@ async function makeRequest(
 					continue;
 				}
 				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS ? waitNote(wait) : '';
-				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body) : String(full.body ?? '');
+				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body, safePath, literals) : String(full.body ?? '');
 				const known = bodyMessage && bodyMessage !== 'Unknown Suno API error' ? bodyMessage : `Suno API returned HTTP ${full.statusCode}`;
 				throw fail(full.body && typeof full.body === 'object' ? full.body : { message: String(full.body ?? '') }, full.statusCode, known + note);
 			}
@@ -377,16 +409,24 @@ async function makeRequest(
 				if (code !== undefined && code !== 200) {
 					const wait = retryAfterMs(retryAfterOf(full));
 					const tooLong = wait !== undefined && wait > MAX_RETRY_AFTER_MS;
-					if (!NO_RETRY_BODY_CODES.has(code) && canRetry(code) && attempt < MAX_RETRIES && !tooLong) {
+					if (!noRetryBody(code) && canRetry(code) && attempt < MAX_RETRIES && !tooLong) {
 						await sleep(wait ?? jitteredDelay(attempt));
 						continue;
 					}
 					const note = tooLong ? waitNote(wait) : '';
-					throw fail(resp, code, parseErrorResponse(response) + note);
+					throw fail(resp, code, parseErrorResponse(response, safePath, literals) + note);
 				}
 			}
 
-			return response;
+			// Suno always answers with a JSON envelope that carries a code, so anything else is a gateway or proxy error.
+			if (!response || typeof response !== 'object') {
+				const text = redactSecrets(typeof response === 'string' ? response : String(response), literals).slice(0, 200);
+				throw fail({ message: text }, full.statusCode, `Suno API returned an unexpected response instead of JSON: ${text || 'empty body'}`);
+			}
+			if (Array.isArray(response) || (response as Record<string, unknown>).code === undefined) {
+				throw fail(Array.isArray(response) ? { data: response } : response, full.statusCode, 'Suno API returned JSON without its status code, so the result cannot be trusted');
+			}
+			return maskLiterals(response, literals);
 		} catch (error) {
 			// The retry decision for an HTTP status or a body-level code was already made above.
 			if (error === thrown) throw new NodeApiError(ctx.getNode(), thrown as unknown as JsonObject);

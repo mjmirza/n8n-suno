@@ -104,3 +104,23 @@ describe('replace section duration (round 3)', () => {
 		expect(() => assertDurationRange(30, 150)).not.toThrow();
 	});
 });
+
+describe('negative Continue At (round 10)', () => {
+	it.each([
+		['extend', { audioId: 'a1' }],
+		['uploadExtend', { uploadUrl: 'https://cdn.example.com/a.mp3' }],
+	])('%s rejects a negative value before any request', async (operation, source) => {
+		const ctx = strict({
+			defaultParamFlag: true, ...source, model: 'V4_5PLUS', callBackUrl: CB, prompt: 'lyrics',
+			style: 'pop', title: 'T', continueAt: -30, instrumental: false,
+		});
+		await expect(handleMusicGeneration.call(ctx as unknown as IExecuteFunctions, operation, 0)).rejects.toThrow('Continue At must be');
+		expect(ctx.helpers.httpRequestWithAuthentication).not.toHaveBeenCalled();
+	});
+
+	it('sets minValue 0 on both Continue At fields', () => {
+		const fields = musicGenerationFields.filter((f) => f.name === 'continueAt');
+		expect(fields).toHaveLength(2);
+		for (const field of fields) expect(field.typeOptions?.minValue).toBe(0);
+	});
+});

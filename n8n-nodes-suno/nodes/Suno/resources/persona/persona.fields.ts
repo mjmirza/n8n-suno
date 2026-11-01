@@ -41,6 +41,7 @@ const vocalStart: INodeProperties = {
 	name: 'vocalStart',
 	type: 'number',
 	default: 0,
+	typeOptions: { minValue: 0 },
 	description: 'Start time in seconds for vocal analysis',
 	displayOptions: {
 		show: {
@@ -55,6 +56,7 @@ const vocalEnd: INodeProperties = {
 	name: 'vocalEnd',
 	type: 'number',
 	default: 30,
+	typeOptions: { minValue: 0 },
 	description: 'End time in seconds for vocal analysis',
 	displayOptions: {
 		show: {
