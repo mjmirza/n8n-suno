@@ -33,3 +33,13 @@ describe('declared runtime (round 8)', () => {
 		expect(readme).toMatch(/Node\.js 18 or newer/);
 	});
 });
+
+describe('release pipeline (round 8)', () => {
+	it('publishes the dist the runtime tests checked, without rebuilding', () => {
+		const workflow = readFileSync(join(__dirname, '..', '..', '.github', 'workflows', 'publish.yml'), 'utf8');
+		const publishJob = workflow.slice(workflow.indexOf('\n  publish:'));
+		expect(publishJob).toMatch(/download-artifact/);
+		expect(publishJob).toMatch(/--ignore-scripts/);
+		expect(publishJob).not.toMatch(/npm run build|npm ci/);
+	});
+});
