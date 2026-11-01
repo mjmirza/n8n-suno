@@ -242,33 +242,45 @@ function isFullResponse(value: unknown): value is FullResponse {
 
 const SECRET_PATTERNS = [/Bearer\s+[^\s"',;]+/gi, /\b(sk|pk|sp|key)[-_][A-Za-z0-9_-]{8,}\b/g, /\b[A-Fa-f0-9]{24,}\b/g];
 
-/** Masks token-like strings so an upstream echo never reaches the n8n UI. */
-export function redactSecrets(text: string): string {
-	return SECRET_PATTERNS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
+/** Masks token-like strings, and the configured key itself, so an upstream echo never reaches the n8n UI. */
+export function redactSecrets(text: string, literals: readonly string[] = []): string {
+	const masked = SECRET_PATTERNS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
+	return literals.reduce((out, literal) => out.split(literal).join('[redacted]'), masked);
 }
 
 const MAX_REDACT_DEPTH = 8;
 
 /** Masks token-like strings in every string inside a value. Deeper or repeated objects are replaced, never passed through raw. */
-export function redactDeep<T>(value: T, seen = new WeakSet<object>(), depth = 0): T {
-	if (typeof value === 'string') return redactSecrets(value) as unknown as T;
+export function redactDeep<T>(value: T, literals: readonly string[] = [], seen = new WeakSet<object>(), depth = 0): T {
+	if (typeof value === 'string') return redactSecrets(value, literals) as unknown as T;
 	if (!value || typeof value !== 'object') return value;
 	if (seen.has(value as object)) return '[circular]' as unknown as T;
 	if (depth > MAX_REDACT_DEPTH) return '[nested too deep]' as unknown as T;
 	seen.add(value as object);
-	if (Array.isArray(value)) return value.map((v) => redactDeep(v, seen, depth + 1)) as unknown as T;
+	if (Array.isArray(value)) return value.map((v) => redactDeep(v, literals, seen, depth + 1)) as unknown as T;
 	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, seen, depth + 1);
+	for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, literals, seen, depth + 1);
 	return out as T;
 }
 
-/** Masks tokens in an n8n error in place, across message, description, messages and any response data it holds. */
-function redactError(error: NodeApiError): NodeApiError {
+/** Masks tokens in an n8n error in place, across message, stack, description, messages and any response data it holds. */
+function redactError<E extends Error>(error: E, literals: readonly string[]): E {
 	const e = error as unknown as Record<string, unknown>;
-	for (const key of ['message', 'description', 'messages', 'context', 'errorResponse', 'cause']) {
-		if (e[key] !== undefined) e[key] = redactDeep(e[key]);
+	for (const key of ['message', 'stack', 'description', 'messages', 'context', 'errorResponse', 'cause']) {
+		if (e[key] !== undefined) e[key] = redactDeep(e[key], literals);
 	}
 	return error;
+}
+
+/** The configured API key, masked verbatim wherever an error echoes it. Short or missing keys are skipped. */
+async function credentialLiterals(ctx: IExecuteFunctions | ILoadOptionsFunctions): Promise<string[]> {
+	try {
+		const credentials = await ctx.getCredentials('sunoApi');
+		const key = typeof credentials?.apiKey === 'string' ? credentials.apiKey.trim() : '';
+		return key.length >= 8 ? [key] : [];
+	} catch {
+		return [];
+	}
 }
 
 function jitteredDelay(attempt: number): number {
@@ -311,13 +323,17 @@ async function makeRequest(
 	options.returnFullResponse = true;
 	options.ignoreHttpStatusErrors = true;
 
+	const literals = await credentialLiterals(ctx);
 	let lastError: unknown;
 	let thrown: NodeApiError | undefined;
 	const fail = (body: object, code: number, message: string) => {
-		thrown = new NodeApiError(ctx.getNode(), redactDeep(body) as JsonObject, {
-			message: redactSecrets(message),
-			httpCode: String(code),
-		});
+		thrown = redactError(
+			new NodeApiError(ctx.getNode(), redactDeep(body, literals) as JsonObject, {
+				message: redactSecrets(message, literals),
+				httpCode: String(code),
+			}),
+			literals,
+		);
 		return thrown;
 	};
 
@@ -370,7 +386,7 @@ async function makeRequest(
 					continue;
 				}
 				// The constructor returns an existing NodeApiError unchanged.
-				throw new NodeApiError(ctx.getNode(), redactError(error as NodeApiError) as unknown as JsonObject);
+				throw new NodeApiError(ctx.getNode(), redactError(error as NodeApiError, literals) as unknown as JsonObject);
 			}
 
 			// A network failure on a write may have reached Suno, so only safe methods resend.
@@ -383,14 +399,17 @@ async function makeRequest(
 	}
 
 	if (lastError instanceof NodeApiError) {
-		throw new NodeApiError(ctx.getNode(), redactError(lastError) as unknown as JsonObject);
+		throw new NodeApiError(ctx.getNode(), redactError(lastError, literals) as unknown as JsonObject);
 	}
 	if (lastError instanceof NodeOperationError) {
-		throw lastError;
+		throw redactError(lastError, literals);
 	}
-	throw new NodeApiError(ctx.getNode(), redactDeep(lastError as JsonObject), {
-		message: 'Suno API request failed',
-	});
+	throw redactError(
+		new NodeApiError(ctx.getNode(), redactDeep(lastError as JsonObject, literals), {
+			message: 'Suno API request failed',
+		}),
+		literals,
+	);
 }
 
 // ---------------------------------------------------------------------------

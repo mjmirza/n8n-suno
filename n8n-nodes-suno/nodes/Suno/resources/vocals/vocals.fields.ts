@@ -9,10 +9,13 @@ import {
 } from '../../utils/descriptions';
 
 // ---------------------------------------------------------------------------
-// Shared model options (V4_5PLUS / V5 only)
+// Shared model options. docs.sunoapi.org lists V6, V6 Mini and V6 Wild as current for Add Vocals and Add Instrumental.
 // ---------------------------------------------------------------------------
 
 const vocalsModelOptions = [
+	{ name: 'V6', value: 'V6', description: 'Current Suno model' },
+	{ name: 'V6 Mini', value: 'V6_MINI', description: 'Current Suno model, lighter and faster' },
+	{ name: 'V6 Wild', value: 'V6_WILD', description: 'Current Suno model, more experimental results' },
 	{ name: 'V4.5 Plus', value: 'V4_5PLUS', description: 'Richer sound, new creation methods, max 8 minutes' },
 	{ name: 'V5', value: 'V5', description: 'Superior musical expression, faster generation' },
 ];
