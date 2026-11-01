@@ -48,7 +48,9 @@ function validateAndAddWeights(
 		assertWeightValue(weirdnessConstraint, 'Weirdness Constraint');
 		body.weirdnessConstraint = weirdnessConstraint;
 	}
-	if (audioWeight !== undefined && audioWeight !== null) {
+	// The API does not support Audio Weight without vocals.
+	const instrumental = ctx.getNodeParameter('instrumental', itemIndex, false) === true;
+	if (audioWeight !== undefined && audioWeight !== null && !instrumental) {
 		assertWeightValue(audioWeight, 'Audio Weight');
 		body.audioWeight = audioWeight;
 	}

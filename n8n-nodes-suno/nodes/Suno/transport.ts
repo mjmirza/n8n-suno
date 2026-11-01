@@ -69,6 +69,8 @@ const PRIVATE_IP_RANGES = [
 
 PRIVATE_IP_RANGES.push(/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, /^(22[4-9]|2[3-5]\d)\./);
 
+const IPV4_LITERAL = /^[0-9]{1,3}(?:[.][0-9]{1,3}){3}$/;
+
 function isPrivateIpv4(host: string): boolean {
 	return PRIVATE_IP_RANGES.some((range) => range.test(host));
 }
@@ -140,7 +142,8 @@ export function assertValidUrl(url: string, label: string): void {
 		throw new Error(`${label} must not point to a local address`);
 	}
 
-	if (isPrivateIpv4(hostname)) {
+	// Only an IPv4 literal is checked against private ranges, so a hostname like 10.example.com is allowed.
+	if (IPV4_LITERAL.test(hostname) && isPrivateIpv4(hostname)) {
 		throw new Error(`${label} must not point to a private IP address`);
 	}
 
@@ -244,10 +247,14 @@ export function redactSecrets(text: string): string {
 	return SECRET_PATTERNS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
 }
 
-/** Masks token-like strings in every string inside a value. Cycles and depth are bounded. */
+const MAX_REDACT_DEPTH = 8;
+
+/** Masks token-like strings in every string inside a value. Deeper or repeated objects are replaced, never passed through raw. */
 export function redactDeep<T>(value: T, seen = new WeakSet<object>(), depth = 0): T {
 	if (typeof value === 'string') return redactSecrets(value) as unknown as T;
-	if (!value || typeof value !== 'object' || depth > 8 || seen.has(value as object)) return value;
+	if (!value || typeof value !== 'object') return value;
+	if (seen.has(value as object)) return '[circular]' as unknown as T;
+	if (depth > MAX_REDACT_DEPTH) return '[nested too deep]' as unknown as T;
 	seen.add(value as object);
 	if (Array.isArray(value)) return value.map((v) => redactDeep(v, seen, depth + 1)) as unknown as T;
 	const out: Record<string, unknown> = {};

@@ -43,7 +43,9 @@ describe('generate input contract (round 3, high 1)', () => {
 
 	it('the Style field is shown in simple mode too', () => {
 		const style = musicGenerationFields.find((f) => f.name === 'style' && f.displayOptions?.show?.operation?.includes('generate'));
-		expect(style?.displayOptions?.show?.customMode).toBeUndefined();
+		expect(style).toBeDefined();
+		expect(style?.displayOptions?.show).toBeDefined();
+		expect(style?.displayOptions?.show).not.toHaveProperty('customMode');
 	});
 
 	it('custom mode without style or negative tags fails before any request', async () => {

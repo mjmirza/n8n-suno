@@ -621,7 +621,7 @@ const replaceSectionNegativeTags: INodeProperties = {
 
 /** Generate accepts these only in custom mode, so they are hidden in simple mode. */
 function customModeOnly(field: INodeProperties): INodeProperties {
-	return { ...field, displayOptions: { show: { ...field.displayOptions?.show, customMode: [true] } } };
+	return { ...field, displayOptions: { ...field.displayOptions, show: { ...field.displayOptions?.show, customMode: [true] } } };
 }
 
 export const musicGenerationFields: INodeProperties[] = [
