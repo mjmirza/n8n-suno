@@ -79,7 +79,7 @@ The node uses one credential, **Suno API**.
 
 - Create the key on the [Suno API key page](https://sunoapi.org/api-key).
 - The key is sent as a Bearer token and stored encrypted by n8n.
-- The credential test calls the credit endpoint, so saving the credential proves the key works.
+- The credential test calls the credit endpoint and fails on any error code Suno documents, such as 401 for a wrong key. A green check means none of those came back. It does not prove the account can generate, so an unusual credit response can still pass. See [the design decisions](https://github.com/mjmirza/n8n-suno/blob/main/n8n-nodes-suno/docs/DESIGN-DECISIONS.md#credential-test-and-unexpected-credit-responses-accepted-exception).
 
 ## Compatibility
 
