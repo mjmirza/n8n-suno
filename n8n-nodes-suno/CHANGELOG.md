@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.7.0] - 2026-11-01
+
+### Added
+- Add Vocals and Add Instrumental offer the current V6, V6 Mini and V6 Wild models. The default stays as before.
+
+### Fixed
+- Error masking also covers the error stack and the configured API key itself, whatever its format. Previously a token could survive in the stack of an error thrown by the HTTP helper, and a key matching none of the token patterns survived in the message.
+
+### Changed
+- The README states that signed provenance covers versions from 1.0.2 on. Earlier versions were published by hand.
+
 ## [1.6.0] - 2026-11-01
 
 ### Fixed
