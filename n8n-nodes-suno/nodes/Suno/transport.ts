@@ -20,8 +20,14 @@ const MAX_RETRIES = 3;
 const RATE_LIMIT_CODES = new Set([405, 430]);
 // Codes where a write may already have been accepted. Only safe methods resend.
 const TRANSIENT_CODES = new Set([429, 502, 503, 504]);
-// Body code 429 means insufficient credits. Retrying cannot succeed.
+// On most endpoints body code 429 means insufficient credits. Retrying cannot succeed.
 const NO_RETRY_BODY_CODES = new Set([429]);
+// These endpoints document 429 as rate limited and 402 as insufficient credits.
+const RATE_LIMIT_429_PATHS = new Set([
+	'/api/v1/generate/generate-persona',
+	'/api/v1/generate/mashup',
+	'/api/v1/generate/replace-section',
+]);
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const BASE_DELAY_MS = 1_000;
 const MAX_ERROR_LENGTH = 1_000;
@@ -185,14 +191,17 @@ export function assertNonEmpty(value: string, label: string, maxLength?: number)
 // Error parsing
 // ---------------------------------------------------------------------------
 
-export function parseErrorResponse(body: unknown): string {
+export function parseErrorResponse(body: unknown, path?: string): string {
 	if (body && typeof body === 'object') {
 		const obj = body as Record<string, unknown>;
 		const code = obj.code as number | undefined;
 		const msg = obj.msg as string | undefined;
 
 		if (code && SUNO_ERROR_MESSAGES[code]) {
-			const base = SUNO_ERROR_MESSAGES[code];
+			const base =
+				code === 429 && path !== undefined && RATE_LIMIT_429_PATHS.has(path)
+					? 'Rate limit exceeded — slow down'
+					: SUNO_ERROR_MESSAGES[code];
 			if (msg && typeof msg === 'string') {
 				const safeMsg = redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
 				return `${base}: ${safeMsg}`;
@@ -334,8 +343,11 @@ async function makeRequest(
 	}
 
 	const safeMethod = SAFE_METHODS.has(String(method).toUpperCase());
+	// A documented 429 rate limit is a rejection before any work, so any method may resend.
+	const limit429 = RATE_LIMIT_429_PATHS.has(safePath);
 	const canRetry = (code: number) =>
-		RATE_LIMIT_CODES.has(code) || (safeMethod && TRANSIENT_CODES.has(code));
+		RATE_LIMIT_CODES.has(code) || (limit429 && code === 429) || (safeMethod && TRANSIENT_CODES.has(code));
+	const noRetryBody = (code: number) => NO_RETRY_BODY_CODES.has(code) && !(limit429 && code === 429);
 
 	// The full response keeps the headers, which n8n drops when it wraps an HTTP error.
 	options.returnFullResponse = true;
@@ -367,7 +379,7 @@ async function makeRequest(
 					continue;
 				}
 				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS ? waitNote(wait) : '';
-				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body) : String(full.body ?? '');
+				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body, safePath) : String(full.body ?? '');
 				const known = bodyMessage && bodyMessage !== 'Unknown Suno API error' ? bodyMessage : `Suno API returned HTTP ${full.statusCode}`;
 				throw fail(full.body && typeof full.body === 'object' ? full.body : { message: String(full.body ?? '') }, full.statusCode, known + note);
 			}
@@ -380,12 +392,12 @@ async function makeRequest(
 				if (code !== undefined && code !== 200) {
 					const wait = retryAfterMs(retryAfterOf(full));
 					const tooLong = wait !== undefined && wait > MAX_RETRY_AFTER_MS;
-					if (!NO_RETRY_BODY_CODES.has(code) && canRetry(code) && attempt < MAX_RETRIES && !tooLong) {
+					if (!noRetryBody(code) && canRetry(code) && attempt < MAX_RETRIES && !tooLong) {
 						await sleep(wait ?? jitteredDelay(attempt));
 						continue;
 					}
 					const note = tooLong ? waitNote(wait) : '';
-					throw fail(resp, code, parseErrorResponse(response) + note);
+					throw fail(resp, code, parseErrorResponse(response, safePath) + note);
 				}
 			}
 

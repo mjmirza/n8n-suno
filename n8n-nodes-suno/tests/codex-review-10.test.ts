@@ -6,7 +6,9 @@ jest.mock('n8n-workflow', () => ({
 	sleep: jest.fn().mockResolvedValue(undefined),
 }));
 
-import { sunoRequest, redactDeep } from '../nodes/Suno/transport';
+import { sunoRequest, redactDeep, parseErrorResponse } from '../nodes/Suno/transport';
+import { assertVocalSegment } from '../nodes/Suno/utils/validators';
+import { personaFields } from '../nodes/Suno/resources/persona/persona.fields';
 import { createMockContext } from './helpers/mockContext';
 
 const KEY = '3f2b8c1e-9d4a-4e7b-8c2f-1a6d5e9b0c7d';
@@ -30,5 +32,45 @@ describe('secrets used as property names (round 10)', () => {
 		const err = (await sunoRequest.call(ctx as unknown as IExecuteFunctions, 'POST', '/x').catch((e: unknown) => e)) as NodeApiError;
 		expect(JSON.stringify({ ...err, message: err.message, stack: err.stack, description: err.description, context: err.context })).not.toContain(KEY);
 		expect(JSON.stringify(err)).not.toContain(KEY);
+	});
+});
+
+describe('body code 429 on endpoints that document it as a rate limit (round 10)', () => {
+	const limited = { code: 429, msg: 'Rate Limited' };
+
+	it.each(['/api/v1/generate/generate-persona', '/api/v1/generate/mashup', '/api/v1/generate/replace-section'])(
+		'retries a POST to %s and labels it a rate limit',
+		async (path) => {
+			const ctx = createMockContext();
+			ctx.helpers.httpRequestWithAuthentication
+				.mockResolvedValueOnce({ statusCode: 200, headers: { 'retry-after': '1' }, body: limited })
+				.mockResolvedValueOnce({ statusCode: 200, headers: {}, body: { code: 200, data: { ok: true } } });
+			const out = await sunoRequest.call(ctx as unknown as IExecuteFunctions, 'POST', path, {});
+			expect(out).toEqual({ code: 200, data: { ok: true } });
+			expect(ctx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(2);
+			expect(parseErrorResponse(limited, path)).toBe('Rate limit exceeded — slow down: Rate Limited');
+		},
+	);
+
+	it('still treats 429 as insufficient credits on Generate and does not retry', async () => {
+		const ctx = createMockContext();
+		ctx.helpers.httpRequestWithAuthentication.mockResolvedValue({ statusCode: 200, headers: {}, body: { code: 429, msg: 'no credits' } });
+		await expect(sunoRequest.call(ctx as unknown as IExecuteFunctions, 'POST', '/api/v1/generate', {})).rejects.toThrow('Insufficient credits');
+		expect(ctx.helpers.httpRequestWithAuthentication).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('persona vocal segment bounds (round 10)', () => {
+	it('rejects a negative start or end', () => {
+		expect(() => assertVocalSegment(-10, 10)).toThrow('must not be negative');
+		expect(() => assertVocalSegment(-30, -10)).toThrow('must not be negative');
+		expect(() => assertVocalSegment(0, 20)).not.toThrow();
+	});
+
+	it('sets minValue 0 on both fields in the editor', () => {
+		for (const name of ['vocalStart', 'vocalEnd']) {
+			const field = personaFields.find((f) => f.name === name);
+			expect(field?.typeOptions?.minValue).toBe(0);
+		}
 	});
 });
