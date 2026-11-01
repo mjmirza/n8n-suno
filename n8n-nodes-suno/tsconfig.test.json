@@ -1,0 +1,16 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"types": [
+			"node",
+			"jest"
+		],
+		"noEmit": true,
+		"isolatedModules": true
+	},
+	"include": [
+		"credentials/**/*.ts",
+		"nodes/**/*.ts",
+		"tests/**/*.ts"
+	]
+}

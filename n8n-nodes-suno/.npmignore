@@ -3,9 +3,7 @@ credentials/
 tests/
 *.ts
 tsconfig.json
-gulpfile.js
 jest.config.js
 .github/
 .env
-README.dev.md
 IMPLEMENTATION_PLAN.md
