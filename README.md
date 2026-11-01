@@ -28,7 +28,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 - **Fewer failed runs, no double charges.** Rate limits are retried automatically with backoff. Temporary outages are retried for reads only, so a paid generation is never submitted twice, and real errors show a clear message in n8n.
 - **Safe by default.** Only HTTPS URLs are accepted, URLs written as local or private network addresses are rejected, and token-like strings are masked in error messages.
 - **Works with the AI Agent node.** The node is usable as a tool, so an agent can generate music on request.
-- **Verifiable releases.** Every version is built in GitHub Actions and published with a signed npm provenance statement that links it to its exact source commit.
+- **Verifiable releases.** Every version since 1.0.2 is built in GitHub Actions and published with a signed npm provenance statement that links it to its exact source commit. Earlier versions were published by hand without provenance.
 
 ## From install to your first song
 
