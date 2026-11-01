@@ -10,6 +10,8 @@
 - Extend Music and Upload and Extend reject a negative Continue At instead of silently leaving it out, and the editor does not allow one.
 - The configured API key is masked wherever a successful response echoes it, for example in a task's error message. Other output is unchanged.
 - A successful HTTP status with a body that is not a JSON envelope, such as a gateway's HTML error page, is now an error. Previously the item reported `{ "success": true }`.
+- A JSON body without Suno's status code, such as `{}` or an array, is an error rather than a success.
+- A long error message is masked before it is shortened, so no fragment of the API key survives the cut.
 
 ### Changed
 - The README describes generation as starting a task, with the audio collected through a callback or Get Music Details.

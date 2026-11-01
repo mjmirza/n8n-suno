@@ -191,7 +191,7 @@ export function assertNonEmpty(value: string, label: string, maxLength?: number)
 // Error parsing
 // ---------------------------------------------------------------------------
 
-export function parseErrorResponse(body: unknown, path?: string): string {
+export function parseErrorResponse(body: unknown, path?: string, literals: readonly string[] = []): string {
 	if (body && typeof body === 'object') {
 		const obj = body as Record<string, unknown>;
 		const code = obj.code as number | undefined;
@@ -203,13 +203,13 @@ export function parseErrorResponse(body: unknown, path?: string): string {
 					? 'Rate limit exceeded — slow down'
 					: SUNO_ERROR_MESSAGES[code];
 			if (msg && typeof msg === 'string') {
-				const safeMsg = redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
+				const safeMsg = redactSecrets(msg, literals).slice(0, MAX_ERROR_LENGTH);
 				return `${base}: ${safeMsg}`;
 			}
 			return base;
 		}
 		if (msg && typeof msg === 'string') {
-			return redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
+			return redactSecrets(msg, literals).slice(0, MAX_ERROR_LENGTH);
 		}
 	}
 	return 'Unknown Suno API error';
@@ -396,7 +396,7 @@ async function makeRequest(
 					continue;
 				}
 				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS ? waitNote(wait) : '';
-				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body, safePath) : String(full.body ?? '');
+				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body, safePath, literals) : String(full.body ?? '');
 				const known = bodyMessage && bodyMessage !== 'Unknown Suno API error' ? bodyMessage : `Suno API returned HTTP ${full.statusCode}`;
 				throw fail(full.body && typeof full.body === 'object' ? full.body : { message: String(full.body ?? '') }, full.statusCode, known + note);
 			}
@@ -414,14 +414,17 @@ async function makeRequest(
 						continue;
 					}
 					const note = tooLong ? waitNote(wait) : '';
-					throw fail(resp, code, parseErrorResponse(response, safePath) + note);
+					throw fail(resp, code, parseErrorResponse(response, safePath, literals) + note);
 				}
 			}
 
-			// Suno always answers with a JSON envelope, so anything else is a gateway or proxy error.
+			// Suno always answers with a JSON envelope that carries a code, so anything else is a gateway or proxy error.
 			if (!response || typeof response !== 'object') {
-				const text = typeof response === 'string' ? response.slice(0, 200) : String(response);
+				const text = redactSecrets(typeof response === 'string' ? response : String(response), literals).slice(0, 200);
 				throw fail({ message: text }, full.statusCode, `Suno API returned an unexpected response instead of JSON: ${text || 'empty body'}`);
+			}
+			if (Array.isArray(response) || (response as Record<string, unknown>).code === undefined) {
+				throw fail(Array.isArray(response) ? { data: response } : response, full.statusCode, 'Suno API returned JSON without its status code, so the result cannot be trusted');
 			}
 			return maskLiterals(response, literals);
 		} catch (error) {

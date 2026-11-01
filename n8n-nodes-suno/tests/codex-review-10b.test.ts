@@ -7,7 +7,7 @@ jest.mock('n8n-workflow', () => ({
 jest.mock('../nodes/Suno/resources/credit/credit.handler', () => ({ handleCredit: jest.fn().mockResolvedValue(undefined) }));
 
 import { Suno } from '../nodes/Suno/Suno.node';
-import { sunoRequest } from '../nodes/Suno/transport';
+import { redactSecrets, sunoRequest } from '../nodes/Suno/transport';
 import { createMockContext } from './helpers/mockContext';
 
 const KEY = '3f2b8c1e-9d4a-4e7b-8c2f-1a6d5e9b0c7d';
@@ -35,5 +35,31 @@ describe('round 10b', () => {
 	it('fails an item whose handler produced no result', async () => {
 		const ctx = createMockContext({ resource: 'credit', operation: 'get' });
 		await expect(new Suno().execute.call(ctx as unknown as IExecuteFunctions)).rejects.toThrow('Suno returned no result');
+	});
+
+	it.each([{}, { error: 'gateway failure' }, []])('rejects a JSON body without a status code (%p)', async (body) => {
+		const ctx = createMockContext();
+		ctx.helpers.httpRequestWithAuthentication.mockResolvedValue({ statusCode: 200, headers: {}, body });
+		await expect(sunoRequest.call(ctx as unknown as IExecuteFunctions, 'GET', '/x')).rejects.toThrow('without its status code');
+	});
+
+	it('masks the whole key even when it sits past the message length limit', async () => {
+		const ctx = createMockContext();
+		ctx.getCredentials.mockResolvedValue({ apiKey: KEY });
+		ctx.helpers.httpRequestWithAuthentication.mockResolvedValue({ statusCode: 200, headers: {}, body: { code: 400, msg: 'x'.repeat(970) + KEY } });
+		const err = (await sunoRequest.call(ctx as unknown as IExecuteFunctions, 'POST', '/x').catch((e: unknown) => e)) as Error;
+		expect(JSON.stringify({ ...err, message: err.message, stack: err.stack })).not.toContain(KEY.slice(0, 12));
+	});
+
+	it('masks the key before trimming a non-JSON body', async () => {
+		const ctx = createMockContext();
+		ctx.getCredentials.mockResolvedValue({ apiKey: KEY });
+		ctx.helpers.httpRequestWithAuthentication.mockResolvedValue({ statusCode: 200, headers: {}, body: 'y'.repeat(180) + KEY });
+		const err = (await sunoRequest.call(ctx as unknown as IExecuteFunctions, 'GET', '/x').catch((e: unknown) => e)) as Error;
+		expect(JSON.stringify({ ...err, message: err.message, stack: err.stack })).not.toContain(KEY.slice(0, 12));
+	});
+
+	it('redactSecrets masks token patterns when no configured key is given', () => {
+		expect(redactSecrets('Bearer abcdef1234567890abcdef1234567890')).not.toContain('abcdef1234567890abcdef1234567890');
 	});
 });
