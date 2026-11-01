@@ -137,18 +137,29 @@ async function handleGenerate(
 
 	addOptionalString(body, 'prompt', prompt);
 
-	if (customMode) {
-		const style = this.getNodeParameter('style', itemIndex, '') as string;
-		const title = this.getNodeParameter('title', itemIndex, '') as string;
+	const style = this.getNodeParameter('style', itemIndex, '') as string;
+	const negativeTags = this.getNodeParameter('negativeTags', itemIndex, '') as string;
+	assertStyleLength(style, model);
 
-		assertStyleLength(style, model);
+	if (customMode) {
+		const title = this.getNodeParameter('title', itemIndex, '') as string;
 		assertTitleLength(title, model);
 
+		// The API rejects a custom request without style, lyrics or negative tags.
+		if (!style.trim() && !negativeTags.trim()) {
+			throw new Error('Custom mode needs a Style or Negative Tags, the Suno API rejects the request without one');
+		}
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
+	} else {
+		// Simple mode needs a style, lyrics or reference media. Without a Style, the prompt is sent as the style.
+		const simpleStyle = style.trim() || prompt.trim();
+		if (!simpleStyle) {
+			throw new Error('Simple mode needs a Prompt or a Style, the Suno API rejects the request without one');
+		}
+		body.style = simpleStyle.slice(0, 1000);
 	}
 
-	const negativeTags = this.getNodeParameter('negativeTags', itemIndex, '') as string;
 	addOptionalString(body, 'negativeTags', negativeTags);
 
 	addPersonaFields(this, body, itemIndex);
@@ -207,6 +218,12 @@ async function handleExtend(
 	addPersonaFields(this, body, itemIndex);
 	addVocalGender(this, body, itemIndex);
 	validateAndAddWeights(this, body, itemIndex);
+
+	// The API forbids vocal inputs on an instrumental extension.
+	if (body.instrumental === true) {
+		delete body.prompt;
+		delete body.vocalGender;
+	}
 
 	const response = await sunoRequest.call(this, 'POST', '/api/v1/generate/extend', body);
 	return response as IDataObject;

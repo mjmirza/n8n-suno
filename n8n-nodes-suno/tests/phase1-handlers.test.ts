@@ -137,12 +137,13 @@ describe('handleMusicGeneration', () => {
 			expect(body.title).toBe('My Song');
 		});
 
-		it('customMode=false does NOT add style/title', async () => {
+		it('customMode=false sends the prompt as style and no title', async () => {
 			const ctx = createMockContext(baseParams);
 			await callHandler(handleMusicGeneration, ctx, 'generate');
 
 			const body = mockSunoRequest.mock.calls[0][2];
-			expect(body).not.toHaveProperty('style');
+			// The API needs a style, lyrics or media in simple mode.
+			expect(body.style).toBe(baseParams.prompt);
 			expect(body).not.toHaveProperty('title');
 		});
 	});
@@ -188,7 +189,7 @@ describe('handleMusicGeneration', () => {
 			expect(body).not.toHaveProperty('instrumental');
 		});
 
-		it('defaultParamFlag=true includes prompt/style/title/continueAt/instrumental', async () => {
+		it('defaultParamFlag=true includes style/title/continueAt/instrumental and drops the prompt when instrumental', async () => {
 			const ctx = createMockContext({
 				...baseParams,
 				defaultParamFlag: true,
@@ -202,7 +203,8 @@ describe('handleMusicGeneration', () => {
 
 			const body = mockSunoRequest.mock.calls[0][2];
 			expect(body.defaultParamFlag).toBe(true);
-			expect(body.prompt).toBe('Extended lyrics');
+			// The API forbids vocal inputs on an instrumental extension.
+			expect(body).not.toHaveProperty('prompt');
 			expect(body.style).toBe('jazz');
 			expect(body.title).toBe('Extended Song');
 			expect(body.continueAt).toBe(30);

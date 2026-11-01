@@ -84,12 +84,11 @@ const generateStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags. In simple mode the prompt is sent as the style when this is empty. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
 			operation: ['generate'],
-			customMode: [true],
 		},
 	},
 };

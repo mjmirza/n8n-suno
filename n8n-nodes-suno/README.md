@@ -44,7 +44,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 |---|---|---|
 | Music Generation | Extend Music | Extend an existing music track |
 | Music Generation | Generate Mashup | Generate a mashup from two audio tracks |
-| Music Generation | Generate Music | Generate a new music track from a prompt |
+| Music Generation | Generate Music | Generate a new music track from a prompt. In simple mode the prompt doubles as the style when Style is empty, as the API needs one |
 | Music Generation | Replace Section | Replace a section of an existing track, sending the full updated lyrics |
 | Music Generation | Upload and Cover Audio | Upload audio and generate a cover version |
 | Music Generation | Upload and Extend Audio | Upload audio and extend it with AI |
