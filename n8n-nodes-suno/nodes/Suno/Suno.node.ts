@@ -4,8 +4,9 @@ import type {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	JsonObject,
 } from 'n8n-workflow';
-import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 // Descriptions
 import { CATEGORIES, buildResourceProperty } from './utils/descriptions';
@@ -81,7 +82,7 @@ export class Suno implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Suno',
 		name: 'suno',
-		icon: 'file:suno.png',
+		icon: { light: 'file:suno.svg', dark: 'file:suno.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -145,18 +146,19 @@ export class Suno implements INodeType {
 				const operation = this.getNodeParameter('operation', i) as string;
 				const result = await handler.call(this, operation, i);
 
+				const pairedItem = { item: i };
 				if (result == null || (result as unknown) === '' || typeof result !== 'object') {
-					returnData.push({ json: { success: true } });
+					returnData.push({ json: { success: true }, pairedItem });
 				} else if (Array.isArray(result)) {
-					returnData.push(...result.map((item) => ({ json: item })));
+					returnData.push(...result.map((item) => ({ json: item, pairedItem })));
 				} else {
 					const data = (result as IDataObject).data !== undefined
 						? (result as IDataObject).data
 						: result;
 					if (Array.isArray(data)) {
-						returnData.push(...(data as IDataObject[]).map((item) => ({ json: item })));
+						returnData.push(...(data as IDataObject[]).map((item) => ({ json: item, pairedItem })));
 					} else {
-						returnData.push({ json: data as IDataObject });
+						returnData.push({ json: data as IDataObject, pairedItem });
 					}
 				}
 			} catch (error) {
@@ -165,8 +167,11 @@ export class Suno implements INodeType {
 						json: { error: (error as Error).message },
 						pairedItem: { item: i },
 					});
+				} else if (error instanceof NodeApiError) {
+					// NodeApiError's constructor returns an existing NodeApiError unchanged.
+					throw new NodeApiError(this.getNode(), error as unknown as JsonObject, { itemIndex: i });
 				} else {
-					throw error;
+					throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 				}
 			}
 		}

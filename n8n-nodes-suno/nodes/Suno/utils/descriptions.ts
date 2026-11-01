@@ -10,12 +10,12 @@ export const CATEGORIES: INodeProperties = {
 	type: 'options',
 	noDataExpression: true,
 	options: [
-		{ name: 'Music Generation', value: 'musicGeneration', description: 'Generate, extend, mashup, and manipulate music' },
-		{ name: 'Lyrics', value: 'lyrics', description: 'Generate lyrics and retrieve timestamped lyrics' },
-		{ name: 'Audio Processing', value: 'audioProcessing', description: 'Separate vocals, convert formats, boost style, generate covers' },
-		{ name: 'Status & Details', value: 'statusDetails', description: 'Query task status and generation details' },
 		{ name: 'Account', value: 'account', description: 'Check remaining credits' },
+		{ name: 'Audio Processing', value: 'audioProcessing', description: 'Separate vocals, convert formats, boost style, generate covers' },
 		{ name: 'File Upload', value: 'fileUpload', description: 'Upload files via base64, stream, or URL' },
+		{ name: 'Lyrics', value: 'lyrics', description: 'Generate lyrics and retrieve timestamped lyrics' },
+		{ name: 'Music Generation', value: 'musicGeneration', description: 'Generate, extend, mashup, and manipulate music' },
+		{ name: 'Status & Details', value: 'statusDetails', description: 'Query task status and generation details' },
 	],
 	default: 'musicGeneration',
 };
@@ -231,6 +231,7 @@ export function vocalGenderField(
 		name: 'vocalGender',
 		type: 'options',
 		options: [
+			{ name: 'No Preference', value: '' },
 			{ name: 'Male', value: 'm' },
 			{ name: 'Female', value: 'f' },
 		],

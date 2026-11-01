@@ -13,16 +13,28 @@ export const musicGenerationOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Extend Music',
+				value: 'extend',
+				description: 'Extend an existing music track',
+				action: 'Extend music',
+			},
+			{
+				name: 'Generate Mashup',
+				value: 'mashup',
+				description: 'Generate a mashup from two audio tracks',
+				action: 'Generate mashup',
+			},
+			{
 				name: 'Generate Music',
 				value: 'generate',
 				description: 'Generate a new music track from a prompt',
 				action: 'Generate music',
 			},
 			{
-				name: 'Extend Music',
-				value: 'extend',
-				description: 'Extend an existing music track',
-				action: 'Extend music',
+				name: 'Replace Section',
+				value: 'replaceSection',
+				description: 'Replace a section of an existing track',
+				action: 'Replace section',
 			},
 			{
 				name: 'Upload and Cover Audio',
@@ -35,18 +47,6 @@ export const musicGenerationOperations: INodeProperties[] = [
 				value: 'uploadExtend',
 				description: 'Upload audio and extend it with AI',
 				action: 'Upload and extend audio',
-			},
-			{
-				name: 'Generate Mashup',
-				value: 'mashup',
-				description: 'Generate a mashup from two audio tracks',
-				action: 'Generate mashup',
-			},
-			{
-				name: 'Replace Section',
-				value: 'replaceSection',
-				description: 'Replace a section of an existing track',
-				action: 'Replace section',
 			},
 		],
 		default: 'generate',

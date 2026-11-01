@@ -6,7 +6,7 @@ import type {
 	ILoadOptionsFunctions,
 	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError, sleep } from 'n8n-workflow';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -94,10 +94,8 @@ export function assertValidUrl(url: string, label: string): void {
 		throw new Error(`${label} exceeds maximum length of ${MAX_URL_LENGTH} characters`);
 	}
 
-	let parsed: URL;
-	try {
-		parsed = new URL(url);
-	} catch {
+	const parsed = URL.canParse(url) ? new URL(url) : undefined;
+	if (!parsed) {
 		throw new Error(`${label} is not a valid URL`);
 	}
 
@@ -179,10 +177,6 @@ function jitteredDelay(attempt: number): number {
 	return base + jitter;
 }
 
-function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 async function makeRequest(
 	ctx: IExecuteFunctions | ILoadOptionsFunctions,
 	baseUrl: string,
@@ -248,7 +242,8 @@ async function makeRequest(
 					await sleep(delay);
 					continue;
 				}
-				throw error;
+				// NodeApiError's constructor returns an existing NodeApiError unchanged.
+				throw new NodeApiError(ctx.getNode(), error as unknown as JsonObject);
 			}
 
 			if (attempt < MAX_RETRIES) {

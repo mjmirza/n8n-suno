@@ -2,7 +2,7 @@
 	"node": "n8n-nodes-suno.suno",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["AI", "Miscellaneous"],
+	"categories": ["Marketing & Content", "Miscellaneous"],
 	"resources": {
 		"primaryDocumentation": [
 			{
@@ -15,8 +15,5 @@
 			}
 		]
 	},
-	"alias": ["suno", "music", "ai", "audio", "lyrics", "generation"],
-	"subcategories": {
-		"AI": ["Audio"]
-	}
+	"alias": ["suno", "music", "ai", "audio", "lyrics", "generation"]
 }
