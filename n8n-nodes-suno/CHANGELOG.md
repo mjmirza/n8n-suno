@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.6] - 2026-11-01
+
+### Changed
+- Generate MIDI says what it returns. Get MIDI Details gives the notes per instrument as JSON, not a .mid file.
+
 ## [1.7.5] - 2026-11-01
 
 ### Changed
