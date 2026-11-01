@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.2] - 2026-11-01
+
+### Changed
+- The publish workflow ships the exact `dist` that the Node.js 18 to 24 runtime tests checked. Previously the publish job rebuilt it before publishing.
+
 ## [1.7.1] - 2026-11-01
 
 ### Fixed
