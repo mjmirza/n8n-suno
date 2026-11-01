@@ -264,7 +264,8 @@ export function weightFields(
 			...base,
 			displayName: 'Audio Weight',
 			name: 'audioWeight',
-			description: 'Input audio influence (0.00-1.00)',
+			description: 'Input audio influence (0.00-1.00). Not supported for instrumental tracks.',
+			displayOptions: { ...base.displayOptions, hide: { instrumental: [true] } },
 		} as INodeProperties,
 	];
 }

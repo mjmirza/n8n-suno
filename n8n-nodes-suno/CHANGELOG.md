@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0] - 2026-11-01
+
+### Fixed
+- Token masking reaches every depth of an error response. A value nested deeper than eight levels, or repeated, is replaced instead of passed through, so a token buried in an upstream error never reaches the n8n error view.
+- URLs whose hostname starts with private-looking numbers, such as 10.example.com or 192.168.example.com, are accepted. Only IPv4 literals are checked against the private ranges.
+- Audio Weight is not sent for instrumental tracks and is hidden in the editor when Instrumental is on. The API does not support it without vocals.
+- A Generate field test now fails if the Style field disappears. Previously optional chaining let it pass.
+
 ## [1.5.0] - 2026-11-01
 
 ### Fixed
