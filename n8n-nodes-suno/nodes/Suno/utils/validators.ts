@@ -103,8 +103,8 @@ export function assertDurationRange(startS: number, endS: number): void {
 		throw new Error('Start time must be less than end time');
 	}
 	const duration = endS - startS;
-	if (duration < 6) {
-		throw new Error(`Replacement duration must be at least 6 seconds (got ${duration.toFixed(2)})`);
+	if (duration < 10) {
+		throw new Error(`Replacement duration must be at least 10 seconds (got ${duration.toFixed(2)})`);
 	}
 	if (duration > 60) {
 		throw new Error(`Replacement duration must not exceed 60 seconds (got ${duration.toFixed(2)})`);
