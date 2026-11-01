@@ -7,6 +7,7 @@ import {
 	assertPromptLength,
 	assertStyleLength,
 	assertTitleLength,
+	styleLimit,
 	assertWeightValue,
 	assertDurationRange,
 	assertUploadUrlList,
@@ -115,6 +116,12 @@ export async function handleMusicGeneration(
 // Generate
 // ---------------------------------------------------------------------------
 
+// docs.sunoapi.org: Generate, Upload and Cover and Mashup allow 80 title characters, Extend and Upload and Extend allow 100, on every model.
+const GENERATE_TITLE_LIMIT = 80;
+const COVER_TITLE_LIMIT = 80;
+const MASHUP_TITLE_LIMIT = 80;
+const EXTEND_TITLE_LIMIT = 100;
+
 async function handleGenerate(
 	this: IExecuteFunctions,
 	itemIndex: number,
@@ -138,12 +145,12 @@ async function handleGenerate(
 	addOptionalString(body, 'prompt', prompt);
 
 	const style = this.getNodeParameter('style', itemIndex, '') as string;
-	const negativeTags = this.getNodeParameter('negativeTags', itemIndex, '') as string;
-	assertStyleLength(style, model);
 
 	if (customMode) {
+		const negativeTags = this.getNodeParameter('negativeTags', itemIndex, '') as string;
 		const title = this.getNodeParameter('title', itemIndex, '') as string;
-		assertTitleLength(title, model);
+		assertStyleLength(style, model);
+		assertTitleLength(title, model, GENERATE_TITLE_LIMIT);
 
 		// The API rejects a custom request without style, lyrics or negative tags.
 		if (!style.trim() && !negativeTags.trim()) {
@@ -151,20 +158,21 @@ async function handleGenerate(
 		}
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
+		addOptionalString(body, 'negativeTags', negativeTags);
+		addPersonaFields(this, body, itemIndex);
+		addVocalGender(this, body, itemIndex);
+		validateAndAddWeights(this, body, itemIndex);
 	} else {
-		// Simple mode needs a style, lyrics or reference media. Without a Style, the prompt is sent as the style.
-		const simpleStyle = style.trim() || prompt.trim();
+		// Simple mode needs a style, lyrics or reference media. Without a Style, the prompt is sent as the style, cut to the model's style limit.
+		assertStyleLength(style, model);
+		const simpleStyle = style.trim() || prompt.trim().slice(0, styleLimit(model));
 		if (!simpleStyle) {
 			throw new Error('Simple mode needs a Prompt or a Style, the Suno API rejects the request without one');
 		}
-		body.style = simpleStyle.slice(0, 1000);
+		body.style = simpleStyle;
+		// Negative tags, vocal gender and the weights are custom-mode only, so they are not sent here.
+		addPersonaFields(this, body, itemIndex);
 	}
-
-	addOptionalString(body, 'negativeTags', negativeTags);
-
-	addPersonaFields(this, body, itemIndex);
-	addVocalGender(this, body, itemIndex);
-	validateAndAddWeights(this, body, itemIndex);
 
 	const response = await sunoRequest.call(this, 'POST', '/api/v1/generate', body);
 	return response as IDataObject;
@@ -202,7 +210,7 @@ async function handleExtend(
 
 		assertPromptLength(prompt, model, true);
 		assertStyleLength(style, model);
-		assertTitleLength(title, model);
+		assertTitleLength(title, model, EXTEND_TITLE_LIMIT);
 
 		addOptionalString(body, 'prompt', prompt);
 		addOptionalString(body, 'style', style);
@@ -263,7 +271,7 @@ async function handleUploadCover(
 		const title = this.getNodeParameter('title', itemIndex, '') as string;
 
 		assertStyleLength(style, model);
-		assertTitleLength(title, model);
+		assertTitleLength(title, model, COVER_TITLE_LIMIT);
 
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
@@ -317,7 +325,7 @@ async function handleUploadExtend(
 
 		assertPromptLength(prompt, model, true);
 		assertStyleLength(style, model);
-		assertTitleLength(title, model);
+		assertTitleLength(title, model, EXTEND_TITLE_LIMIT);
 
 		addOptionalString(body, 'prompt', prompt);
 		addOptionalString(body, 'style', style);
@@ -375,7 +383,7 @@ async function handleMashup(
 
 		assertPromptLength(prompt, model, true);
 		assertStyleLength(style, model);
-		assertTitleLength(title, model);
+		assertTitleLength(title, model, MASHUP_TITLE_LIMIT);
 
 		addOptionalString(body, 'prompt', prompt);
 		addOptionalString(body, 'style', style);

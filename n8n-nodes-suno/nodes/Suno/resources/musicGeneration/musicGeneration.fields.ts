@@ -619,6 +619,11 @@ const replaceSectionNegativeTags: INodeProperties = {
 // Export all fields
 // ============================================================================
 
+/** Generate accepts these only in custom mode, so they are hidden in simple mode. */
+function customModeOnly(field: INodeProperties): INodeProperties {
+	return { ...field, displayOptions: { show: { ...field.displayOptions?.show, customMode: [true] } } };
+}
+
 export const musicGenerationFields: INodeProperties[] = [
 	// --- GENERATE ---
 	generateCustomMode,
@@ -629,10 +634,10 @@ export const musicGenerationFields: INodeProperties[] = [
 	generatePromptNonCustom,
 	generateStyle,
 	generateTitle,
-	negativeTagsField(['musicGeneration'], ['generate']),
+	customModeOnly(negativeTagsField(['musicGeneration'], ['generate'])),
 	...personaFields(['musicGeneration'], ['generate']),
-	...weightFields(['musicGeneration'], ['generate']),
-	vocalGenderField(['musicGeneration'], ['generate']),
+	...weightFields(['musicGeneration'], ['generate']).map(customModeOnly),
+	customModeOnly(vocalGenderField(['musicGeneration'], ['generate'])),
 
 	// --- EXTEND ---
 	extendDefaultParamFlag,

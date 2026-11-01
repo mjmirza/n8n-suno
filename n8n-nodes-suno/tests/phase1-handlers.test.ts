@@ -99,9 +99,11 @@ describe('handleMusicGeneration', () => {
 			expect(body).not.toHaveProperty('styleWeight');
 		});
 
-		it('includes optional fields when provided', async () => {
+		it('includes optional fields when provided in custom mode', async () => {
 			const ctx = createMockContext({
 				...baseParams,
+				customMode: true,
+				style: 'rock',
 				negativeTags: 'no drums',
 				personaId: 'persona-1',
 				personaModel: 'V4_5',

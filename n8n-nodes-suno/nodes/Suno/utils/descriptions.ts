@@ -149,6 +149,10 @@ export function modelField(
 	modelOptions?: Array<{ name: string; value: string; description: string }>,
 ): INodeProperties {
 	const defaultModels = [
+		{ name: 'V6', value: 'V6', description: 'Current Suno model' },
+		{ name: 'V6 Mini', value: 'V6_MINI', description: 'Current Suno model, lighter and faster' },
+		{ name: 'V6 Wild', value: 'V6_WILD', description: 'Current Suno model, more experimental results' },
+		{ name: 'V5.5', value: 'V5_5', description: 'Deprecated by Suno, kept for existing workflows' },
 		{ name: 'V5', value: 'V5', description: 'Superior musical expression, faster generation' },
 		{ name: 'V4.5 Plus', value: 'V4_5PLUS', description: 'Richer sound, new creation methods, max 8 minutes' },
 		{ name: 'V4.5 All', value: 'V4_5ALL', description: 'Better song structure, max 8 minutes' },

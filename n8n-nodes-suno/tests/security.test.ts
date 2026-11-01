@@ -348,7 +348,7 @@ describe('Error Message Safety', () => {
 		const malicious = 'x'.repeat(200) + '; DROP TABLE users';
 		try {
 			assertSafeId(malicious, 'ID');
-			fail('Should have thrown');
+			throw new Error('expected the validator to throw');
 		} catch (e: any) {
 			// The error message should mention "invalid characters" but NOT contain
 			// the full SQL injection payload
@@ -361,7 +361,7 @@ describe('Error Message Safety', () => {
 		const urlWithKey = 'http://evil.com/?key=sk-secret-api-key-12345';
 		try {
 			assertValidUrl(urlWithKey, 'URL');
-			fail('Should have thrown');
+			throw new Error('expected the validator to throw');
 		} catch (e: any) {
 			// Should fail because it is not HTTPS, error should be generic
 			expect(e.message).toContain('HTTPS');
@@ -372,11 +372,14 @@ describe('Error Message Safety', () => {
 
 	it('error messages from invalid IDs are generic and safe', () => {
 		const xssPayload = '<script>alert("xss")</script>';
+		expect(() => assertSafeId(xssPayload, 'ID')).toThrow(/ID/);
+		let message = '';
 		try {
 			assertSafeId(xssPayload, 'ID');
-			fail('Should have thrown');
-		} catch (e: any) {
-			expect(e.message).not.toContain('<script>');
+		} catch (e: unknown) {
+			message = (e as Error).message;
 		}
+		expect(message).not.toBe('');
+		expect(message).not.toContain('<script>');
 	});
 });
