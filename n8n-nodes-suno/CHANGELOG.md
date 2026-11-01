@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0] - 2026-11-01
+
+### Fixed
+- Generate in simple mode meets the current API contract. Suno now rejects a simple-mode request without a style, lyrics or reference media. The Style field is shown in simple mode too, and when it is empty the prompt is sent as the style, so existing prompt-only workflows keep working.
+- Generate in custom mode stops with a clear error when neither Style nor Negative Tags is set, instead of failing upstream.
+- Token-like strings are masked in every field of an API error, including the message, description, the response data and errors raised by the HTTP layer. Previously only the `msg` field was masked.
+- Extend no longer sends a prompt or vocal gender with an instrumental extension. The API forbids them.
+- Replace Section no longer caps the range at 60 seconds. The API limits it to half the original track, which the node cannot know, so the upper bound is left to the API.
+
+### Changed
+- The `continueAt` test now runs the custom-parameter branch and fails if no request is made.
+
 ## [1.2.1] - 2026-11-01
 
 ### Fixed

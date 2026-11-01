@@ -216,6 +216,26 @@ export function redactSecrets(text: string): string {
 	return SECRET_PATTERNS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
 }
 
+/** Masks token-like strings in every string inside a value. Cycles and depth are bounded. */
+export function redactDeep<T>(value: T, seen = new WeakSet<object>(), depth = 0): T {
+	if (typeof value === 'string') return redactSecrets(value) as unknown as T;
+	if (!value || typeof value !== 'object' || depth > 8 || seen.has(value as object)) return value;
+	seen.add(value as object);
+	if (Array.isArray(value)) return value.map((v) => redactDeep(v, seen, depth + 1)) as unknown as T;
+	const out: Record<string, unknown> = {};
+	for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, seen, depth + 1);
+	return out as T;
+}
+
+/** Masks tokens in an n8n error in place, across message, description, messages and any response data it holds. */
+function redactError(error: NodeApiError): NodeApiError {
+	const e = error as unknown as Record<string, unknown>;
+	for (const key of ['message', 'description', 'messages', 'context', 'errorResponse', 'cause']) {
+		if (e[key] !== undefined) e[key] = redactDeep(e[key]);
+	}
+	return error;
+}
+
 function jitteredDelay(attempt: number): number {
 	const base = BASE_DELAY_MS * Math.pow(2, attempt);
 	const jitter = Math.random() * BASE_DELAY_MS;
@@ -272,7 +292,7 @@ async function makeRequest(
 						await sleep(jitteredDelay(attempt));
 						continue;
 					}
-					const safeBody = { ...resp, msg: typeof resp.msg === 'string' ? redactSecrets(resp.msg) : resp.msg };
+					const safeBody = redactDeep(resp);
 					bodyError = new NodeApiError(ctx.getNode(), safeBody as JsonObject, {
 						message: parseErrorResponse(response),
 						httpCode: String(code),
@@ -298,7 +318,7 @@ async function makeRequest(
 					continue;
 				}
 				// The constructor returns an existing NodeApiError unchanged.
-				throw new NodeApiError(ctx.getNode(), error as unknown as JsonObject);
+				throw new NodeApiError(ctx.getNode(), redactError(error) as unknown as JsonObject);
 			}
 
 			// A network failure on a write may have reached Suno, so only safe methods resend.
@@ -310,7 +330,10 @@ async function makeRequest(
 		}
 	}
 
-	if (lastError instanceof NodeApiError || lastError instanceof NodeOperationError) {
+	if (lastError instanceof NodeApiError) {
+		throw new NodeApiError(ctx.getNode(), redactError(lastError) as unknown as JsonObject);
+	}
+	if (lastError instanceof NodeOperationError) {
 		throw lastError;
 	}
 	throw new NodeApiError(ctx.getNode(), (lastError ?? {}) as JsonObject, {
