@@ -37,7 +37,7 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm test
+      - run: npm run test:coverage
       - name: Root and package READMEs match
         run: cmp ../README.md README.md
       - name: Node metadata ships in the package

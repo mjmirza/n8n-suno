@@ -199,14 +199,39 @@ export function parseErrorResponse(body: unknown): string {
 // Core request function
 // ---------------------------------------------------------------------------
 
-/** Reads Retry-After from the HTTP response that n8n wraps in the error's cause. */
-function retryAfterOf(error: unknown): unknown {
-	const err = error as {
+/** Reads Retry-After from a full response's headers, or from an error's headers or cause. */
+function retryAfterOf(source: unknown): unknown {
+	const err = source as {
 		headers?: Record<string, unknown>;
 		cause?: { response?: { headers?: Record<string, unknown> }; headers?: Record<string, unknown> };
 	};
-	const headers = err.cause?.response?.headers ?? err.cause?.headers ?? err.headers;
-	return headers?.['retry-after'];
+	const headers = err?.headers ?? err?.cause?.response?.headers ?? err?.cause?.headers;
+	if (!headers) return undefined;
+	const key = Object.keys(headers).find((k) => k.toLowerCase() === 'retry-after');
+	const value = key === undefined ? undefined : headers[key];
+	return Array.isArray(value) ? value[0] : value;
+}
+
+/** Longest Retry-After the node waits through. A longer one stops the retries with a clear message. */
+export const MAX_RETRY_AFTER_MS = 60_000;
+
+/** Retry-After in milliseconds, from seconds or an HTTP date, or undefined when absent or invalid. */
+export function retryAfterMs(value: unknown, now = Date.now()): number | undefined {
+	if (value === undefined || value === null || value === '') return undefined;
+	const seconds = Number(value);
+	if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1_000;
+	const date = Date.parse(String(value));
+	return Number.isFinite(date) ? Math.max(date - now, 0) : undefined;
+}
+
+interface FullResponse {
+	statusCode: number;
+	headers?: Record<string, unknown>;
+	body: unknown;
+}
+
+function isFullResponse(value: unknown): value is FullResponse {
+	return !!value && typeof value === 'object' && typeof (value as FullResponse).statusCode === 'number' && 'body' in (value as object);
 }
 
 const SECRET_PATTERNS = [/Bearer\s+[^\s"',;]+/gi, /\b(sk|pk|sp|key)[-_][A-Za-z0-9_-]{8,}\b/g, /\b[A-Fa-f0-9]{24,}\b/g];
@@ -272,17 +297,40 @@ async function makeRequest(
 	const canRetry = (code: number) =>
 		RATE_LIMIT_CODES.has(code) || (safeMethod && TRANSIENT_CODES.has(code));
 
+	// The full response keeps the headers, which n8n drops when it wraps an HTTP error.
+	options.returnFullResponse = true;
+	options.ignoreHttpStatusErrors = true;
+
 	let lastError: unknown;
-	let bodyError: NodeApiError | undefined;
+	let thrown: NodeApiError | undefined;
+	const fail = (body: unknown, code: number, message: string) => {
+		thrown = new NodeApiError(ctx.getNode(), redactDeep(body ?? {}) as JsonObject, {
+			message: redactSecrets(message),
+			httpCode: String(code),
+		});
+		return thrown;
+	};
 
 	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
 		try {
-			const response = await ctx.helpers.httpRequestWithAuthentication.call(
-				ctx,
-				'sunoApi',
-				options,
-			);
+			const raw = await ctx.helpers.httpRequestWithAuthentication.call(ctx, 'sunoApi', options);
+			const full: FullResponse = isFullResponse(raw) ? raw : { statusCode: 200, body: raw };
 
+			if (full.statusCode >= 400) {
+				const wait = retryAfterMs(retryAfterOf(full));
+				if (canRetry(full.statusCode) && attempt < MAX_RETRIES && (wait === undefined || wait <= MAX_RETRY_AFTER_MS)) {
+					await sleep(wait ?? jitteredDelay(attempt));
+					continue;
+				}
+				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS
+					? ` Suno asked to wait ${Math.ceil(wait / 1_000)} seconds (Retry-After), longer than this node waits.`
+					: '';
+				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body) : String(full.body ?? '');
+				const known = bodyMessage && bodyMessage !== 'Unknown Suno API error' ? bodyMessage : `Suno API returned HTTP ${full.statusCode}`;
+				throw fail(full.body && typeof full.body === 'object' ? full.body : { message: String(full.body ?? '') }, full.statusCode, known + note);
+			}
+
+			const response = full.body;
 			if (response && typeof response === 'object') {
 				const resp = response as Record<string, unknown>;
 				const code = resp.code as number | undefined;
@@ -292,33 +340,26 @@ async function makeRequest(
 						await sleep(jitteredDelay(attempt));
 						continue;
 					}
-					const safeBody = redactDeep(resp);
-					bodyError = new NodeApiError(ctx.getNode(), safeBody as JsonObject, {
-						message: parseErrorResponse(response),
-						httpCode: String(code),
-					});
-					throw bodyError;
+					throw fail(resp, code, parseErrorResponse(response));
 				}
 			}
 
 			return response;
 		} catch (error) {
-			// The retry decision for a body-level code was already made above.
-			if (error === bodyError) throw new NodeApiError(ctx.getNode(), bodyError as unknown as JsonObject);
+			// The retry decision for an HTTP status or a body-level code was already made above.
+			if (error === thrown) throw new NodeApiError(ctx.getNode(), thrown as unknown as JsonObject);
 			lastError = error;
 
-			if (error instanceof NodeApiError) {
-				const httpCode = Number((error as NodeApiError & { httpCode?: string }).httpCode);
-				if (canRetry(httpCode) && attempt < MAX_RETRIES) {
-					const retryAfter = Number(retryAfterOf(error));
-					const delay = Number.isFinite(retryAfter) && retryAfter > 0
-						? Math.min(retryAfter, 60) * 1_000
-						: jitteredDelay(attempt);
-					await sleep(delay);
+			// An HTTP error from a helper that still throws on status. A non-numeric code such as ECONNRESET is a network failure.
+			const httpCode = error instanceof NodeApiError ? Number((error as NodeApiError & { httpCode?: string }).httpCode) : NaN;
+			if (Number.isFinite(httpCode) && httpCode >= 400) {
+				const wait = retryAfterMs(retryAfterOf(error));
+				if (canRetry(httpCode) && attempt < MAX_RETRIES && (wait === undefined || wait <= MAX_RETRY_AFTER_MS)) {
+					await sleep(wait ?? jitteredDelay(attempt));
 					continue;
 				}
 				// The constructor returns an existing NodeApiError unchanged.
-				throw new NodeApiError(ctx.getNode(), redactError(error) as unknown as JsonObject);
+				throw new NodeApiError(ctx.getNode(), redactError(error as NodeApiError) as unknown as JsonObject);
 			}
 
 			// A network failure on a write may have reached Suno, so only safe methods resend.
@@ -336,7 +377,7 @@ async function makeRequest(
 	if (lastError instanceof NodeOperationError) {
 		throw lastError;
 	}
-	throw new NodeApiError(ctx.getNode(), (lastError ?? {}) as JsonObject, {
+	throw new NodeApiError(ctx.getNode(), redactDeep((lastError ?? {}) as JsonObject), {
 		message: 'Suno API request failed',
 	});
 }
