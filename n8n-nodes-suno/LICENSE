@@ -1,51 +1,21 @@
-Fair Use Code License (FUCL)
+MIT License
 
-Copyright (c) 2026 Mirza Iqbal / next8n (https://next8n.com). All rights reserved.
+Copyright (c) 2026 Mirza Iqbal
 
-This node is published as an n8n community node for the benefit of the Suno AI + n8n
-ecosystem. However, the intellectual property, source code, and all associated rights
-are owned exclusively by the copyright holder.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-PERMITTED:
-  - Install and use this node for your own internal workflows and business automation
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-PROHIBITED WITHOUT EXPLICIT WRITTEN CONSENT:
-  - Copying, forking, or reproducing the source code in any form
-  - Commercial redistribution, resale, sublicensing, or white-labeling
-  - Creating derivative works or competing products based on this code
-  - Public redistribution of modified or unmodified versions
-  - Using the Software as part of a commercial service offering
-  - Removing or altering copyright notices or attribution
-
-ATTRIBUTION:
-  This node was developed and is actively maintained by next8n (https://next8n.com).
-  Attribution must be preserved in all copies.
-
-DISCLAIMER:
-  This software is provided "as is", without warranty of any kind, express or implied,
-  including but not limited to the warranties of merchantability, fitness for a
-  particular purpose, and noninfringement. In no event shall the authors or copyright
-  holders be liable for any claim, damages, or other liability, whether in an action
-  of contract, tort, or otherwise, arising from, out of, or in connection with the
-  software or the use or other dealings in the software.
-
-SCOPE OF LICENSE:
-  This license applies solely to the source code of this integration node. It does not
-  apply to any names, logos, or trademarks of third parties.
-
-LEGAL NOTICE:
-  "Suno" and the Suno logo are trademarks of Suno, Inc. We do not claim ownership of
-  the Suno brand, name, or logo. This community node is not affiliated with, endorsed
-  by, or sponsored by Suno, Inc. All trademarks, service marks, trade names, and logos
-  referenced herein belong to their respective owners. This node was developed
-  independently as a community contribution, using publicly available API documentation,
-  for the sole purpose of enabling interoperability between n8n and the Suno API -- as
-  permitted under EU Directive 2009/24/EC (Software Directive, Article 6) and applicable
-  law. No Suno proprietary code is included; all interactions use publicly documented
-  REST API endpoints. This is an original, independently authored work; the source code
-  of this integration node is the intellectual property of the copyright holder, and is
-  the only thing covered by this license. The use of third-party APIs for
-  interoperability purposes does not constitute infringement under EU or international
-  law (see also Google LLC v. Oracle America, Inc., 593 U.S. 1 (2021) on API fair use).
-
-For commercial licensing, partnership, or custom development: https://services.next8n.com
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

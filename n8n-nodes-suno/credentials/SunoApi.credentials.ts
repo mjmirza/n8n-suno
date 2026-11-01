@@ -2,6 +2,7 @@ import type {
 	IAuthenticateGeneric,
 	ICredentialTestRequest,
 	ICredentialType,
+	Icon,
 	INodeProperties,
 } from 'n8n-workflow';
 
@@ -11,6 +12,8 @@ export class SunoApi implements ICredentialType {
 	displayName = 'Suno API';
 
 	documentationUrl = 'https://docs.sunoapi.org';
+
+	icon: Icon = { light: 'file:../nodes/Suno/suno.svg', dark: 'file:../nodes/Suno/suno.dark.svg' };
 
 	properties: INodeProperties[] = [
 		{

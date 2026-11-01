@@ -1,19 +1,24 @@
 {
 	"compilerOptions": {
 		"strict": true,
-		"target": "es2019",
-		"module": "commonjs",
-		"lib": ["es2019"],
-		"declaration": true,
-		"declarationMap": true,
+		"target": "es2022",
+		"module": "node16",
+		"lib": [
+			"es2022"
+		],
+		"declaration": false,
+		"declarationMap": false,
 		"sourceMap": true,
-		"moduleResolution": "node",
+		"moduleResolution": "node16",
 		"outDir": "./dist",
 		"rootDir": ".",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"types": [
+			"node"
+		]
 	},
 	"include": [
 		"credentials/**/*.ts",

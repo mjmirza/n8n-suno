@@ -28,4 +28,8 @@ jobs:
           cache-dependency-path: n8n-nodes-suno/package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
       - run: npm test
+      - name: Root and package READMEs match
+        run: cmp ../README.md README.md

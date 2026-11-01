@@ -180,7 +180,7 @@ const extendTitle: INodeProperties = {
 };
 
 const extendContinueAt: INodeProperties = {
-	displayName: 'Continue At (seconds)',
+	displayName: 'Continue At (Seconds)',
 	name: 'continueAt',
 	type: 'number',
 	typeOptions: { numberPrecision: 2 },
@@ -362,7 +362,7 @@ const uploadExtendTitle: INodeProperties = {
 };
 
 const uploadExtendContinueAt: INodeProperties = {
-	displayName: 'Continue At (seconds)',
+	displayName: 'Continue At (Seconds)',
 	name: 'continueAt',
 	type: 'number',
 	typeOptions: { numberPrecision: 2 },
@@ -555,7 +555,7 @@ const replaceSectionTitle: INodeProperties = {
 };
 
 const replaceSectionInfillStartS: INodeProperties = {
-	displayName: 'Infill Start (seconds)',
+	displayName: 'Infill Start (Seconds)',
 	name: 'infillStartS',
 	type: 'number',
 	typeOptions: { numberPrecision: 2 },
@@ -571,7 +571,7 @@ const replaceSectionInfillStartS: INodeProperties = {
 };
 
 const replaceSectionInfillEndS: INodeProperties = {
-	displayName: 'Infill End (seconds)',
+	displayName: 'Infill End (Seconds)',
 	name: 'infillEndS',
 	type: 'number',
 	typeOptions: { numberPrecision: 2 },
