@@ -274,7 +274,10 @@ export function redactDeep<T>(value: T, literals: readonly string[] = [], seen =
 	seen.add(value as object);
 	if (Array.isArray(value)) return value.map((v) => redactDeep(v, literals, seen, depth + 1)) as unknown as T;
 	const out: Record<string, unknown> = {};
-	for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redactDeep(v, literals, seen, depth + 1);
+	// Property names are masked too, since a response can echo a secret as a key.
+	for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+		out[redactSecrets(k, literals)] = redactDeep(v, literals, seen, depth + 1);
+	}
 	return out as T;
 }
 
