@@ -264,6 +264,12 @@ export function redactDeep<T>(value: T, literals: readonly string[] = [], seen =
 	if (typeof value === 'string') return redactSecrets(value, literals) as unknown as T;
 	if (!value || typeof value !== 'object') return value;
 	if (seen.has(value as object)) return '[circular]' as unknown as T;
+	// An Error keeps message and stack in non-enumerable properties, so copy them explicitly.
+	if (value instanceof Error && !seen.has(value)) {
+		const plain = { ...(value as unknown as Record<string, unknown>), name: value.name, message: value.message, stack: value.stack };
+		seen.add(value);
+		return redactDeep(plain, literals, seen, depth) as unknown as T;
+	}
 	if (depth > MAX_REDACT_DEPTH) return '[nested too deep]' as unknown as T;
 	seen.add(value as object);
 	if (Array.isArray(value)) return value.map((v) => redactDeep(v, literals, seen, depth + 1)) as unknown as T;
@@ -413,9 +419,11 @@ async function makeRequest(
 	if (lastError instanceof NodeOperationError) {
 		throw redactError(lastError, literals);
 	}
+	const cause = lastError instanceof Error ? lastError.message : '';
 	throw redactError(
 		new NodeApiError(ctx.getNode(), redactDeep(lastError as JsonObject, literals), {
 			message: 'Suno API request failed',
+			description: cause ? redactSecrets(cause, literals) : undefined,
 		}),
 		literals,
 	);

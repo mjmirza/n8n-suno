@@ -26,11 +26,11 @@ describe('runtimes without URL.canParse (round 8)', () => {
 });
 
 describe('declared runtime (round 8)', () => {
-	it('package.json and the README state the Node.js 18 minimum', () => {
+	it('package.json and the README state the Node.js 18.17 minimum', () => {
 		const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')) as { engines?: { node?: string } };
-		expect(pkg.engines?.node).toBe('>=18.0.0');
+		expect(pkg.engines?.node).toBe('>=18.17.0');
 		const readme = readFileSync(join(__dirname, '..', 'README.md'), 'utf8');
-		expect(readme).toMatch(/Node\.js 18 or newer/);
+		expect(readme).toMatch(/Node\.js 18\.17 or newer/);
 	});
 });
 
