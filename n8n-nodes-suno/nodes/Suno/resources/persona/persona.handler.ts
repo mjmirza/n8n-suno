@@ -33,12 +33,10 @@ export async function handlePersona(
 		description: description.trim(),
 	};
 
-	// Validate vocal segment if provided
-	if (vocalStart !== undefined && vocalEnd !== undefined) {
-		assertVocalSegment(vocalStart, vocalEnd);
-		body.vocalStart = vocalStart;
-		body.vocalEnd = vocalEnd;
-	}
+	// Both fields always have a value (defaults 0 and 30), so the segment is always validated and sent.
+	assertVocalSegment(vocalStart, vocalEnd);
+	body.vocalStart = vocalStart;
+	body.vocalEnd = vocalEnd;
 
 	if (style) {
 		body.style = style;

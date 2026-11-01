@@ -23,12 +23,6 @@ function addOptionalString(body: IDataObject, key: string, value: unknown): void
 	}
 }
 
-function addOptionalNumber(body: IDataObject, key: string, value: unknown): void {
-	if (value !== undefined && value !== null && value !== '') {
-		body[key] = value;
-	}
-}
-
 function validateAndAddWeights(
 	ctx: IExecuteFunctions,
 	body: IDataObject,
@@ -254,7 +248,8 @@ async function handleUploadCover(
 
 	assertValidUploadUrl(uploadUrl);
 	assertValidCallbackUrl(callBackUrl);
-	assertPromptLength(prompt, model, customMode);
+	// The endpoint always runs in custom mode, so the custom prompt limit applies.
+	assertPromptLength(prompt, model, true);
 
 	const body: IDataObject = {
 		uploadUrl,

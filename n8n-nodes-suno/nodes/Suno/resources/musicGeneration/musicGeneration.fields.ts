@@ -52,7 +52,7 @@ const generatePromptCustom: INodeProperties = {
 	typeOptions: { rows: 4 },
 	default: '',
 	description:
-		'Lyrics or text prompt for the music. Max length depends on model: V4 = 3,000 chars, V4.5/V5 = 5,000 chars.',
+		'Lyrics or text prompt for the music. Max 3,000 characters on V4, 5,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -68,7 +68,7 @@ const generatePromptNonCustom: INodeProperties = {
 	type: 'string',
 	typeOptions: { rows: 4 },
 	default: '',
-	description: 'A text description of the music you want to generate. Max 500 characters.',
+	description: 'A text description of the music you want to generate. Max 3,000 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -84,7 +84,7 @@ const generateStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags. In simple mode the prompt is sent as the style when this is empty. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags. In simple mode the prompt is sent as the style when this is empty. Max 200 characters on V4, 1,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -99,7 +99,7 @@ const generateTitle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Title of the generated track. Max length depends on model: V4 = 80 chars, V4.5/V5 = 100 chars.',
+		'Title of the generated track. Max 80 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -136,7 +136,7 @@ const extendPrompt: INodeProperties = {
 	typeOptions: { rows: 4 },
 	default: '',
 	description:
-		'Lyrics or text prompt for the extension. Max length depends on model: V4 = 3,000 chars, V4.5/V5 = 5,000 chars.',
+		'Lyrics or text prompt for the extension. Max 3,000 characters on V4, 5,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -152,7 +152,7 @@ const extendStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags for the extension. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags for the extension. Max 200 characters on V4, 1,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -168,7 +168,7 @@ const extendTitle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Title for the extended track. Max length depends on model: V4 = 80 chars, V4.5/V5 = 100 chars.',
+		'Title for the extended track. Max 100 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -250,7 +250,7 @@ const uploadCoverPrompt: INodeProperties = {
 	typeOptions: { rows: 4 },
 	default: '',
 	description:
-		'Lyrics or text prompt for the cover. Max length depends on model: V4 = 3,000 chars, V4.5/V5 = 5,000 chars.',
+		'Lyrics or text prompt for the cover. Max 3,000 characters on V4, 5,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -265,7 +265,7 @@ const uploadCoverStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags for the cover. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags for the cover. Max 200 characters on V4, 1,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -281,7 +281,7 @@ const uploadCoverTitle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Title for the cover track. Max length depends on model: V4 = 80 chars, V4.5/V5 = 100 chars.',
+		'Title for the cover track. Max 80 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -318,7 +318,7 @@ const uploadExtendPrompt: INodeProperties = {
 	typeOptions: { rows: 4 },
 	default: '',
 	description:
-		'Lyrics or text prompt for the extension. Max length depends on model: V4 = 3,000 chars, V4.5/V5 = 5,000 chars.',
+		'Lyrics or text prompt for the extension. Max 3,000 characters on V4, 5,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -334,7 +334,7 @@ const uploadExtendStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags for the extension. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags for the extension. Max 200 characters on V4, 1,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -350,7 +350,7 @@ const uploadExtendTitle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Title for the extended track. Max length depends on model: V4 = 80 chars, V4.5/V5 = 100 chars.',
+		'Title for the extended track. Max 100 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -447,7 +447,7 @@ const mashupPrompt: INodeProperties = {
 	typeOptions: { rows: 4 },
 	default: '',
 	description:
-		'Lyrics or text prompt for the mashup. Max length depends on model: V4 = 3,000 chars, V4.5/V5 = 5,000 chars.',
+		'Lyrics or text prompt for the mashup. Max 3,000 characters on V4, 5,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -463,7 +463,7 @@ const mashupStyle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Music style or genre tags for the mashup. Max length depends on model: V4 = 200 chars, V4.5/V5 = 1,000 chars.',
+		'Music style or genre tags for the mashup. Max 200 characters on V4, 1,000 on the other models.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],
@@ -479,7 +479,7 @@ const mashupTitle: INodeProperties = {
 	type: 'string',
 	default: '',
 	description:
-		'Title for the mashup track. Max length depends on model: V4 = 80 chars, V4.5/V5 = 100 chars.',
+		'Title for the mashup track. Max 80 characters.',
 	displayOptions: {
 		show: {
 			resource: ['musicGeneration'],

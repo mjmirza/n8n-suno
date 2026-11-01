@@ -81,9 +81,8 @@ function isPrivateIpv6(host: string): boolean {
 	if (/^fe[89ab][0-9a-f]?:/.test(h)) return true;
 	const mapped = /^::ffff:(?:0:)?(.+)$/.exec(h);
 	if (mapped) {
-		const tail = mapped[1];
-		if (tail.includes('.')) return isPrivateIpv4(tail);
-		const groups = tail.split(':');
+		// WHATWG URL parsing always rewrites a dotted IPv4 tail as two hex groups.
+		const groups = mapped[1].split(':');
 		if (groups.length === 2) {
 			const hi = parseInt(groups[0], 16);
 			const lo = parseInt(groups[1], 16);
@@ -224,6 +223,10 @@ export function retryAfterMs(value: unknown, now = Date.now()): number | undefin
 	return Number.isFinite(date) ? Math.max(date - now, 0) : undefined;
 }
 
+function waitNote(wait: number): string {
+	return ` Suno asked to wait ${Math.ceil(wait / 1_000)} seconds (Retry-After), longer than this node waits.`;
+}
+
 interface FullResponse {
 	statusCode: number;
 	headers?: Record<string, unknown>;
@@ -303,8 +306,8 @@ async function makeRequest(
 
 	let lastError: unknown;
 	let thrown: NodeApiError | undefined;
-	const fail = (body: unknown, code: number, message: string) => {
-		thrown = new NodeApiError(ctx.getNode(), redactDeep(body ?? {}) as JsonObject, {
+	const fail = (body: object, code: number, message: string) => {
+		thrown = new NodeApiError(ctx.getNode(), redactDeep(body) as JsonObject, {
 			message: redactSecrets(message),
 			httpCode: String(code),
 		});
@@ -322,9 +325,7 @@ async function makeRequest(
 					await sleep(wait ?? jitteredDelay(attempt));
 					continue;
 				}
-				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS
-					? ` Suno asked to wait ${Math.ceil(wait / 1_000)} seconds (Retry-After), longer than this node waits.`
-					: '';
+				const note = wait !== undefined && wait > MAX_RETRY_AFTER_MS ? waitNote(wait) : '';
 				const bodyMessage = full.body && typeof full.body === 'object' ? parseErrorResponse(full.body) : String(full.body ?? '');
 				const known = bodyMessage && bodyMessage !== 'Unknown Suno API error' ? bodyMessage : `Suno API returned HTTP ${full.statusCode}`;
 				throw fail(full.body && typeof full.body === 'object' ? full.body : { message: String(full.body ?? '') }, full.statusCode, known + note);
@@ -336,11 +337,14 @@ async function makeRequest(
 				const code = resp.code as number | undefined;
 
 				if (code !== undefined && code !== 200) {
-					if (!NO_RETRY_BODY_CODES.has(code) && canRetry(code) && attempt < MAX_RETRIES) {
-						await sleep(jitteredDelay(attempt));
+					const wait = retryAfterMs(retryAfterOf(full));
+					const tooLong = wait !== undefined && wait > MAX_RETRY_AFTER_MS;
+					if (!NO_RETRY_BODY_CODES.has(code) && canRetry(code) && attempt < MAX_RETRIES && !tooLong) {
+						await sleep(wait ?? jitteredDelay(attempt));
 						continue;
 					}
-					throw fail(resp, code, parseErrorResponse(response));
+					const note = tooLong ? waitNote(wait) : '';
+					throw fail(resp, code, parseErrorResponse(response) + note);
 				}
 			}
 
@@ -377,7 +381,7 @@ async function makeRequest(
 	if (lastError instanceof NodeOperationError) {
 		throw lastError;
 	}
-	throw new NodeApiError(ctx.getNode(), redactDeep((lastError ?? {}) as JsonObject), {
+	throw new NodeApiError(ctx.getNode(), redactDeep(lastError as JsonObject), {
 		message: 'Suno API request failed',
 	});
 }

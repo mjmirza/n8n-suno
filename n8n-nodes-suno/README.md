@@ -35,8 +35,8 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 1. In n8n open **Settings > Community Nodes**, select **Install**, enter `n8n-nodes-suno` and confirm.
 2. Get an API key on the [Suno API key page](https://sunoapi.org/api-key).
 3. In n8n create a new **Suno API** credential and paste the key. n8n tests it against your credit balance, so a wrong key shows up immediately.
-4. Add a **Suno** node to a workflow, pick **Account > Credit > Get Credits** and run it. You see your remaining credits.
-5. Switch to **Music Generation > Generate Music**, write a prompt and run it. The node returns the task ID, and **Task Details > Get Music Details** returns the finished audio URLs.
+4. Add a **Suno** node to a workflow, set **Resource** to **Credit** and **Operation** to **Get Credits**, and run it. You see your remaining credits.
+5. Set **Resource** to **Music Generation** and **Operation** to **Generate Music**, write a prompt, and enter a **Callback URL**. It must be a public HTTPS address, for example the production URL of an n8n Webhook node. Run it. The node returns the task ID, and **Task Details > Get Music Details** returns the finished audio URLs.
 
 ## Operations
 
@@ -71,7 +71,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 | File Upload | Upload URL | Upload a file from an HTTPS URL |
 | Persona | Generate Persona | Create a reusable persona from a completed music generation |
 
-The Category selector at the top of the node groups these resources as Music Generation, Lyrics, Audio Processing, Status & Details, Account and File Upload.
+The Resource list is ordered by area: music generation, lyrics, audio processing, task details, account and file upload.
 
 ## Credentials
 
