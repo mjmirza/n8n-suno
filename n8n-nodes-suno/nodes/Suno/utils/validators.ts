@@ -113,6 +113,9 @@ export function assertDurationRange(startS: number, endS: number): void {
 	if (typeof endS !== 'number' || !Number.isFinite(endS)) {
 		throw new Error('End time must be a finite number');
 	}
+	if (startS < 0 || endS < 0) {
+		throw new Error('Start and end times must not be negative');
+	}
 	if (startS >= endS) {
 		throw new Error('Start time must be less than end time');
 	}
