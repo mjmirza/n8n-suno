@@ -7,6 +7,12 @@
 - A secret echoed as the response `code` is masked in the error's HTTP code as well.
 - Generate Persona, Generate Mashup and Replace Section retry a body code 429, which those endpoints document as a rate limit, and label it a rate limit. Previously it was shown as "Insufficient credits" and never retried. On every other endpoint 429 still means insufficient credits.
 - Generate Persona rejects a negative vocal start or end, and the editor does not allow them. The API requires both to be 0 or more.
+- Extend Music and Upload and Extend reject a negative Continue At instead of silently leaving it out, and the editor does not allow one.
+- The configured API key is masked wherever a successful response echoes it, for example in a task's error message. Other output is unchanged.
+- A successful HTTP status with a body that is not a JSON envelope, such as a gateway's HTML error page, is now an error. Previously the item reported `{ "success": true }`.
+
+### Changed
+- The README describes generation as starting a task, with the audio collected through a callback or Get Music Details.
 
 ## [1.7.3] - 2026-11-01
 

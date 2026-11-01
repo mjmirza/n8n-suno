@@ -212,6 +212,9 @@ async function handleExtend(
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
 		// The API requires continueAt to be greater than 0, so the 0 default means not set.
+		if (typeof continueAt !== 'number' || !Number.isFinite(continueAt) || continueAt < 0) {
+			throw new Error('Continue At must be 0 (not set) or a positive number of seconds');
+		}
 		if (continueAt > 0) body.continueAt = continueAt;
 		body.instrumental = instrumental;
 	}
@@ -328,6 +331,9 @@ async function handleUploadExtend(
 		addOptionalString(body, 'style', style);
 		addOptionalString(body, 'title', title);
 		// The API requires continueAt to be greater than 0, so the 0 default means not set.
+		if (typeof continueAt !== 'number' || !Number.isFinite(continueAt) || continueAt < 0) {
+			throw new Error('Continue At must be 0 (not set) or a positive number of seconds');
+		}
 		if (continueAt > 0) body.continueAt = continueAt;
 		body.instrumental = instrumental;
 	}

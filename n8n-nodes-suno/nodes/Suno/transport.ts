@@ -290,6 +290,23 @@ export function redactDeep<T>(value: T, literals: readonly string[] = [], seen =
 	return out as T;
 }
 
+/** Masks the configured credential wherever a successful response echoes it, in keys and values. Other text is untouched. */
+function maskLiterals<T>(value: T, literals: readonly string[]): T {
+	const present = literals.filter((literal) => JSON.stringify(value).includes(literal));
+	if (present.length === 0) return value;
+	const walk = (v: unknown): unknown => {
+		if (typeof v === 'string') return present.reduce((out, literal) => out.split(literal).join('[redacted]'), v);
+		if (Array.isArray(v)) return v.map(walk);
+		if (v && typeof v === 'object') {
+			const out: Record<string, unknown> = {};
+			for (const [k, inner] of Object.entries(v as Record<string, unknown>)) out[walk(k) as string] = walk(inner);
+			return out;
+		}
+		return v;
+	};
+	return walk(value) as T;
+}
+
 /** Masks tokens in an n8n error in place, across message, stack, description, messages and any response data it holds. */
 function redactError<E extends Error>(error: E, literals: readonly string[]): E {
 	const e = error as unknown as Record<string, unknown>;
@@ -401,7 +418,12 @@ async function makeRequest(
 				}
 			}
 
-			return response;
+			// Suno always answers with a JSON envelope, so anything else is a gateway or proxy error.
+			if (!response || typeof response !== 'object') {
+				const text = typeof response === 'string' ? response.slice(0, 200) : String(response);
+				throw fail({ message: text }, full.statusCode, `Suno API returned an unexpected response instead of JSON: ${text || 'empty body'}`);
+			}
+			return maskLiterals(response, literals);
 		} catch (error) {
 			// The retry decision for an HTTP status or a body-level code was already made above.
 			if (error === thrown) throw new NodeApiError(ctx.getNode(), thrown as unknown as JsonObject);

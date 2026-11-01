@@ -22,7 +22,7 @@ An n8n community node for the [Suno API](https://sunoapi.org). It turns a text p
 
 ## What you get
 
-- **A song from a prompt in one workflow step.** No copying files between the Suno site and your other tools.
+- **A song from a prompt without leaving n8n.** One node starts the generation and returns a task ID. A Webhook callback or Get Music Details collects the finished audio, so no files are copied between the Suno site and your other tools.
 - **The core Suno workflow in one node.** 28 operations across music, vocals, lyrics, stems, WAV, MIDI, video, cover art, personas, uploads and credits. Recovery Audio, Generate Sounds and the Suno Voice custom voice operations are not included yet, call them with the HTTP Request node.
 - **Results that land where you need them.** Every output stays linked to the input item that produced it, so downstream nodes always know which song belongs to which row.
 - **Fewer failed runs, no double charges.** Rate limits are retried automatically with backoff. Temporary outages are retried for reads only, so a paid generation is never submitted twice, and real errors show a clear message in n8n.

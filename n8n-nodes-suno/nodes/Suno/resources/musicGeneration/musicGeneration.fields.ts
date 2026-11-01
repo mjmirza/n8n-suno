@@ -182,7 +182,7 @@ const extendContinueAt: INodeProperties = {
 	displayName: 'Continue At (Seconds)',
 	name: 'continueAt',
 	type: 'number',
-	typeOptions: { numberPrecision: 2 },
+	typeOptions: { minValue: 0, numberPrecision: 2 },
 	default: 0,
 	description: 'The timestamp in seconds from which to continue the extension',
 	displayOptions: {
@@ -364,7 +364,7 @@ const uploadExtendContinueAt: INodeProperties = {
 	displayName: 'Continue At (Seconds)',
 	name: 'continueAt',
 	type: 'number',
-	typeOptions: { numberPrecision: 2 },
+	typeOptions: { minValue: 0, numberPrecision: 2 },
 	default: 0,
 	description: 'The timestamp in seconds from which to continue the extension',
 	displayOptions: {

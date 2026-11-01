@@ -145,8 +145,9 @@ export class Suno implements INodeType {
 				const result = await handler.call(this, operation, i);
 
 				const pairedItem = { item: i };
-				if (result == null || (result as unknown) === '' || typeof result !== 'object') {
-					returnData.push({ json: { success: true }, pairedItem });
+				// A run that produced no API result is a failure, never a silent success.
+				if (result == null || typeof result !== 'object') {
+					throw new NodeOperationError(this.getNode(), 'Suno returned no result for this item', { itemIndex: i });
 				} else if (Array.isArray(result)) {
 					returnData.push(...result.map((item) => ({ json: item, pairedItem })));
 				} else {
