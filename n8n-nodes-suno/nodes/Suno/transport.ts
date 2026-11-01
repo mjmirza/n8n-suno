@@ -17,7 +17,7 @@ export const SUNO_UPLOAD_BASE_URL = 'https://sunoapiorg.redpandaai.co';
 
 const MAX_RETRIES = 3;
 // Codes a request was rejected with before Suno did any work, so any method may resend.
-const RATE_LIMIT_CODES = new Set([430]);
+const RATE_LIMIT_CODES = new Set([405, 430]);
 // Codes where a write may already have been accepted. Only safe methods resend.
 const TRANSIENT_CODES = new Set([429, 502, 503, 504]);
 // Body code 429 means insufficient credits. Retrying cannot succeed.
@@ -183,13 +183,13 @@ export function parseErrorResponse(body: unknown): string {
 		if (code && SUNO_ERROR_MESSAGES[code]) {
 			const base = SUNO_ERROR_MESSAGES[code];
 			if (msg && typeof msg === 'string') {
-				const safeMsg = msg.slice(0, MAX_ERROR_LENGTH);
+				const safeMsg = redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
 				return `${base}: ${safeMsg}`;
 			}
 			return base;
 		}
 		if (msg && typeof msg === 'string') {
-			return msg.slice(0, MAX_ERROR_LENGTH);
+			return redactSecrets(msg).slice(0, MAX_ERROR_LENGTH);
 		}
 	}
 	return 'Unknown Suno API error';
@@ -198,6 +198,23 @@ export function parseErrorResponse(body: unknown): string {
 // ---------------------------------------------------------------------------
 // Core request function
 // ---------------------------------------------------------------------------
+
+/** Reads Retry-After from the HTTP response that n8n wraps in the error's cause. */
+function retryAfterOf(error: unknown): unknown {
+	const err = error as {
+		headers?: Record<string, unknown>;
+		cause?: { response?: { headers?: Record<string, unknown> }; headers?: Record<string, unknown> };
+	};
+	const headers = err.cause?.response?.headers ?? err.cause?.headers ?? err.headers;
+	return headers?.['retry-after'];
+}
+
+const SECRET_PATTERNS = [/Bearer\s+[^\s"',;]+/gi, /\b(sk|pk|sp|key)[-_][A-Za-z0-9_-]{8,}\b/g, /\b[A-Fa-f0-9]{24,}\b/g];
+
+/** Masks token-like strings so an upstream echo never reaches the n8n UI. */
+export function redactSecrets(text: string): string {
+	return SECRET_PATTERNS.reduce((out, pattern) => out.replace(pattern, '[redacted]'), text);
+}
 
 function jitteredDelay(attempt: number): number {
 	const base = BASE_DELAY_MS * Math.pow(2, attempt);
@@ -255,7 +272,8 @@ async function makeRequest(
 						await sleep(jitteredDelay(attempt));
 						continue;
 					}
-					bodyError = new NodeApiError(ctx.getNode(), response as JsonObject, {
+					const safeBody = { ...resp, msg: typeof resp.msg === 'string' ? redactSecrets(resp.msg) : resp.msg };
+					bodyError = new NodeApiError(ctx.getNode(), safeBody as JsonObject, {
 						message: parseErrorResponse(response),
 						httpCode: String(code),
 					});
@@ -272,9 +290,7 @@ async function makeRequest(
 			if (error instanceof NodeApiError) {
 				const httpCode = Number((error as NodeApiError & { httpCode?: string }).httpCode);
 				if (canRetry(httpCode) && attempt < MAX_RETRIES) {
-					const retryAfter = Number(
-						(error as NodeApiError & { headers?: Record<string, string> }).headers?.['retry-after'],
-					);
+					const retryAfter = Number(retryAfterOf(error));
 					const delay = Number.isFinite(retryAfter) && retryAfter > 0
 						? Math.min(retryAfter, 60) * 1_000
 						: jitteredDelay(attempt);

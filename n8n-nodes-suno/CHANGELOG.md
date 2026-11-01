@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.1] - 2026-11-01
+
+### Fixed
+- Generate, Extend, Upload and Cover, Upload and Extend, Mashup, Add Vocals and Add Instrumental run with only their required fields set. Previously the optional Style Weight, Weirdness Constraint and Audio Weight were read with an undefined fallback, so n8n stopped with "Could not get parameter" before any request.
+- Extend and Upload and Extend no longer send `continueAt: 0`. The API requires a value greater than 0, so the 0 default now means not set.
+- Replace Section requires at least 10 seconds, as the API does. Previously 6 to 9 second ranges passed locally and failed upstream.
+- Saving the credential fails for an invalid key. Suno answers HTTP 200 with code 401 in the body, previously that passed the test.
+- Body code 405 (rate limit) is retried like 430.
+- Retry-After is read from the HTTP response n8n wraps in the error. Previously it was read from a property that does not exist, so the server's wait was ignored.
+- Token-like strings in upstream error messages are masked in both the message and the description.
+
+### Changed
+- The publish workflow only publishes a tag whose commit is on main.
+- README states the URL check precisely. It rejects URLs written as local or private addresses, it does not resolve DNS.
+
 ## [1.2.0] - 2026-11-01
 
 ### Fixed

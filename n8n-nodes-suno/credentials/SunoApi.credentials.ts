@@ -49,5 +49,12 @@ export class SunoApi implements ICredentialType {
 			url: '/api/v1/generate/credit',
 			method: 'GET',
 		},
+		// Suno answers HTTP 200 with an error code in the body, so check the body too.
+		rules: [
+			{
+				type: 'responseSuccessBody',
+				properties: { key: 'code', value: 401, message: 'Invalid API key' },
+			},
+		],
 	};
 }
